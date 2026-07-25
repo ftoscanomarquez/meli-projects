@@ -1,0 +1,489 @@
+.page {
+  min-height: 100dvh;
+  padding: 32px 20px 80px;
+  background: radial-gradient(ellipse at 50% 0%, var(--bg-card) 0%, var(--bg-space) 60%, var(--bg-space-deep) 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+
+.title {
+  font-size: 1.8rem;
+  color: var(--ink);
+  text-align: center;
+}
+
+.header {
+  width: 100%;
+  max-width: 760px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.exitAdminButton {
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: var(--ink);
+  background: var(--bg-card);
+  border: 1px solid rgba(201, 207, 255, 0.25);
+  border-radius: var(--radius-pill);
+  padding: 8px 18px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.exitAdminButton:hover {
+  background: var(--bg-card-hover);
+}
+
+.tabBar {
+  display: flex;
+  gap: 6px;
+  background: var(--bg-space-deep);
+  border-radius: var(--radius-pill);
+  padding: 4px;
+}
+
+.tabButton {
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 8px 18px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tabButton[data-active="true"] {
+  background: linear-gradient(135deg, var(--sun-core), var(--sun-flare));
+  color: #2a1200;
+}
+
+.panel {
+  width: 100%;
+  max-width: 760px;
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.panelTitle {
+  font-size: 1.2rem;
+  color: var(--ink);
+}
+
+.group {
+  border: 1px solid rgba(201, 207, 255, 0.15);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.groupTitle {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--sun-core);
+  font-size: 0.95rem;
+}
+
+.fieldRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fieldLabel {
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+}
+
+.fieldInput {
+  background: var(--bg-space-deep);
+  border: 1px solid rgba(201, 207, 255, 0.25);
+  border-radius: 10px;
+  color: var(--ink);
+  padding: 8px 12px;
+  font-family: var(--font-data);
+  font-size: 0.9rem;
+  width: 100%;
+}
+
+.fieldInputWide {
+  composes: fieldInput;
+  font-family: var(--font-body);
+}
+
+.saveButton {
+  align-self: flex-start;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: #2a1200;
+  background: linear-gradient(135deg, var(--sun-core), var(--sun-flare));
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 12px 28px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.saveButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.status {
+  font-family: var(--font-data);
+  font-size: 0.85rem;
+}
+
+.status[data-tone="error"] {
+  color: #ff6a8a;
+}
+
+.status[data-tone="success"] {
+  color: #4dffb8;
+}
+
+.status[data-tone="pending"] {
+  color: var(--ink-muted);
+}
+
+.searchRow {
+  display: flex;
+  gap: 10px;
+}
+
+.searchInput {
+  composes: fieldInput;
+  flex: 1;
+  font-family: var(--font-body);
+}
+
+.searchButton {
+  font-family: var(--font-data);
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--bg-card-hover);
+  border: 1px solid rgba(201, 207, 255, 0.25);
+  border-radius: var(--radius-pill);
+  padding: 8px 20px;
+  cursor: pointer;
+}
+
+.playerList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.playerRow {
+  background: var(--bg-space-deep);
+  border-radius: 14px;
+  padding: 12px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.playerEmail {
+  color: var(--ink);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.playerAliasHint {
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+}
+
+.profileEditForm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.playerStars {
+  font-family: var(--font-data);
+  color: var(--sun-core);
+  font-size: 0.85rem;
+}
+
+.playerRole {
+  font-family: var(--font-data);
+  color: var(--ink-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.adjustForm {
+  display: flex;
+  gap: 6px;
+}
+
+.adjustInput {
+  composes: fieldInput;
+  width: 90px;
+}
+
+/* Fecha de nacimiento en el editor de perfil del admin (ver AGENTS.md §6.8)
+   — etiqueta chica encima del <input type="date">, mismo ancho que el
+   resto de campos del formulario. */
+.adminFieldLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--font-data);
+  font-size: 0.68rem;
+  color: var(--ink-muted);
+}
+
+@media (max-width: 520px) {
+  .playerRow {
+    grid-template-columns: 1fr;
+    text-align: left;
+  }
+}
+
+/* Eliminar cuentas (selección múltiple, ver AGENTS.md §2.3) */
+.playerCheckbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--sun-core);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.deleteBar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: var(--bg-space-deep);
+  border-radius: 12px;
+  padding: 10px 16px;
+}
+
+.deleteButton {
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #ff6a8a;
+  background: rgba(255, 106, 138, 0.12);
+  border: 1px solid rgba(255, 106, 138, 0.4);
+  border-radius: var(--radius-pill);
+  padding: 8px 16px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.deleteButton:hover {
+  background: rgba(255, 106, 138, 0.2);
+}
+
+.deleteButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.confirmOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 8, 21, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 60;
+}
+
+.confirmCard {
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  padding: 28px;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: center;
+}
+
+.confirmText {
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+
+.confirmActions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* Comentarios/sugerencias (ver AGENTS.md §2.3) */
+.includeReadRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.feedbackRow {
+  background: var(--bg-space-deep);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.feedbackRow[data-read="true"] {
+  opacity: 0.6;
+}
+
+.feedbackMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  color: var(--ink);
+  font-size: 0.85rem;
+}
+
+.feedbackMessage {
+  color: var(--ink);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+/* Editor de Términos y Condiciones (ver AGENTS.md §6.5) — reutiliza
+   .confirmOverlay como fondo pero con una tarjeta más ancha/alta para un
+   textarea largo. */
+.termsEditorCard {
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  padding: 28px;
+  width: min(640px, 100%);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Modal de edición de perfil de jugador (2026-07-24) — pedido explícito del
+   usuario: los campos en línea "estan abultados y no se ve ni si quiera la
+   descripcion de los campos... mejor... que abra un Modal y que ahi ya se
+   aparezcan los campos a editar con sus descripciones". Reutiliza
+   `.confirmOverlay` como fondo, `.field`/`.fieldLabel`/`.fieldInput` para
+   cada campo (mismos que usa AdminConfigForm.tsx, para no duplicar
+   estilos). */
+.editModalCard {
+  position: relative;
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  padding: 28px;
+  width: min(480px, 100%);
+  max-height: 85vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: left;
+}
+
+/* Botón de cierre explícito — regla general del proyecto (ver AGENTS.md
+   §12.12): todo modal nuevo lleva uno, salvo indicación contraria. Mismo
+   degradado Sol brillante que ya se usa para el cierre de PlanetInfoModal
+   (ver RETROSPECTIVA.md — un fondo oscuro sobre un overlay igual de oscuro
+   casi no se ve). */
+.editModalClose {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, var(--sun-core), var(--sun-flare));
+  color: #2a1200;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fieldHint {
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+  line-height: 1.4;
+}
+
+.editModalForm {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.planetCheckboxList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.planetCheckboxRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.termsTextarea {
+  flex: 1;
+  min-height: 320px;
+  resize: vertical;
+  background: var(--bg-space-deep);
+  border: 1px solid rgba(201, 207, 255, 0.25);
+  border-radius: 12px;
+  color: var(--ink);
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  font-family: inherit;
+}

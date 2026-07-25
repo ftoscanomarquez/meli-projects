@@ -1,0 +1,30 @@
+.toggle {
+  display: flex;
+  background: var(--bg-space-deep);
+  border-radius: var(--radius-pill);
+  padding: 2px;
+  gap: 2px;
+}
+
+.option {
+  font-family: var(--font-data);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 5px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.option[data-active="true"] {
+  background: linear-gradient(135deg, var(--sun-core), var(--sun-flare));
+  color: #2a1200;
+}
+
+.option:disabled {
+  cursor: default;
+  opacity: 0.7;
+}

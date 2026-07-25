@@ -1,0 +1,200 @@
+.widget {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-card);
+  border: 1px solid rgba(201, 207, 255, 0.15);
+  border-radius: var(--radius-pill);
+  padding: 8px 14px;
+  font-size: 0.85rem;
+}
+
+/* Escritorio: flota en la esquina sin competir con el contenido.
+   Móvil: vive en el flujo normal del documento (nunca "fixed") para no
+   taparlo mientras se hace scroll — ver AGENTS.md §3.1 (adaptativo PC↔Mobile). */
+@media (min-width: 641px) {
+  .widget {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 10;
+  }
+}
+
+/* Justificado a la derecha en móvil (antes centrado) — pedido explícito del
+   usuario (2026-07-24): "en mobile... la parte del Boton Salir, numero de
+   estrellas y alias... justifica esa seccion más a la derecha". */
+@media (max-width: 640px) {
+  .widget {
+    margin: 12px calc(12px + env(safe-area-inset-right, 0px)) 0 auto;
+    width: fit-content;
+    max-width: calc(100% - 24px);
+  }
+}
+
+.form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* En móvil, el formulario de correo/código pasa a columna (correo arriba,
+   botón "Entrar con código" al centro, "¿Olvidaste tu correo?" abajo) en
+   vez de una fila que se envuelve — pedido explícito del usuario
+   (2026-07-24): "en modo celular no se puede entrar a colocar el mail...
+   como el boton Apoyanos esta fijo los demas componentes no se pueden ver
+   ni usar bien". Una fila ancha (aunque el widget ya esté justificado a la
+   derecha) sigue pudiendo extenderse lo bastante a la izquierda como para
+   quedar debajo del botón fijo "Apóyanos" (arriba-izquierda, z-index más
+   alto) — en columna, angosta, el formulario ya no se extiende tanto. */
+@media (max-width: 640px) {
+  .form {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+}
+
+.emailInput {
+  background: var(--bg-space-deep);
+  border: 1px solid rgba(201, 207, 255, 0.25);
+  border-radius: var(--radius-pill);
+  color: var(--ink);
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  min-width: 0;
+  width: clamp(140px, 30vw, 220px);
+}
+
+@media (max-width: 640px) {
+  .emailInput {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+.submitButton,
+.signOutButton {
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #2a1200;
+  background: linear-gradient(135deg, var(--sun-core), var(--sun-flare));
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 8px 16px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sessionInfo {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  color: var(--ink-muted);
+}
+
+/* En móvil, el selector de idioma se saca del widget de sesión y se coloca
+   fijo debajo del botón "Apóyanos" (arriba-izquierda, ver
+   DonationButton.module.css#floatingButton) — pedido explícito del usuario
+   (2026-07-22): "que el contenedor que tiene el alias del jugador y el
+   número de estrellas y el botón salir no se traslapen con el botón
+   Apóyanos". En escritorio se queda exactamente donde estaba (inline,
+   dentro del widget de sesión arriba-derecha). */
+@media (max-width: 640px) {
+  .languageSwitcherWrapper {
+    position: fixed;
+    top: calc(16px + 44px + 10px + env(safe-area-inset-top, 0px));
+    left: calc(16px + env(safe-area-inset-left, 0px));
+    z-index: 15;
+  }
+}
+
+/* Botón "Mi perfil" en móvil: apilado justo debajo del selector de idioma
+   de arriba, mismo criterio de "fixed fuera del widget" — pedido explícito
+   del usuario (2026-07-24). En escritorio no aplica nada (se queda inline
+   dentro de `.widget`, ver el `<div>` que lo envuelve en AuthStatus.tsx). */
+@media (max-width: 640px) {
+  .profileButtonWrapper {
+    position: fixed;
+    top: calc(16px + 44px + 10px + 40px + 10px + env(safe-area-inset-top, 0px));
+    left: calc(16px + env(safe-area-inset-left, 0px));
+    z-index: 15;
+  }
+}
+
+.starCount {
+  font-family: var(--font-data);
+  color: var(--sun-core);
+  font-weight: 700;
+}
+
+/* Botón "Mi perfil" (autoservicio, ver AGENTS.md §6.8) — mismo tamaño/estilo
+   que la campanita de notificaciones al lado. */
+.profileButton {
+  background: var(--bg-card-hover);
+  border: none;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* La regla móvil de `.emailInput` (ancho 100%, columna) vive junto a su
+   definición base más arriba — se quitó esta versión anterior (`width:
+   auto; flex: 1`), pensada para la fila que se envolvía, porque entraba en
+   conflicto con el nuevo layout en columna pedido por el usuario. */
+
+/* Paso de código de 6 dígitos — ver AGENTS.md §6.3 */
+.codeStepText {
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+  max-width: 220px;
+  text-align: center;
+  flex-basis: 100%;
+}
+
+.codeInput {
+  background: var(--bg-space-deep);
+  border: 1px solid rgba(201, 207, 255, 0.25);
+  border-radius: var(--radius-pill);
+  color: var(--sun-core);
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.35em;
+  text-align: center;
+  padding: 8px 10px 8px 16px;
+  width: 130px;
+}
+
+.codeStepActions {
+  display: flex;
+  gap: 12px;
+  flex-basis: 100%;
+  justify-content: center;
+}
+
+.linkButton {
+  appearance: none;
+  background: none;
+  border: none;
+  color: var(--star-dust);
+  font-size: 0.72rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 2px;
+}
+
+.linkButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

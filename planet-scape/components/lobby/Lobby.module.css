@@ -1,0 +1,192 @@
+.page {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: radial-gradient(ellipse at 50% 0%, var(--bg-card) 0%, var(--bg-space) 60%, var(--bg-space-deep) 100%);
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  text-align: center;
+}
+
+.title {
+  font-size: 1.5rem;
+  color: var(--ink);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.input {
+  background: var(--bg-space-deep);
+  border: 1px solid rgba(201, 207, 255, 0.25);
+  border-radius: var(--radius-pill);
+  color: var(--ink);
+  padding: 12px 18px;
+  font-size: 1rem;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.primaryButton {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: #2a1200;
+  background: linear-gradient(135deg, var(--sun-core), var(--sun-flare));
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 12px 24px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.secondaryButton {
+  font-family: var(--font-data);
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--bg-card-hover);
+  border: 1px solid rgba(201, 207, 255, 0.25);
+  border-radius: var(--radius-pill);
+  padding: 10px 20px;
+  cursor: pointer;
+  display: inline-block;
+  text-align: center;
+  text-decoration: none;
+}
+
+.divider {
+  color: var(--ink-muted);
+  font-family: var(--font-data);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.soloLink {
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+  text-decoration: underline;
+}
+
+.roster {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+
+.rosterItem {
+  background: var(--bg-space-deep);
+  border-radius: var(--radius-pill);
+  padding: 10px 16px;
+  color: var(--ink);
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95rem;
+}
+
+.you {
+  color: var(--sun-core);
+  font-family: var(--font-data);
+  font-size: 0.8rem;
+}
+
+.countdown {
+  font-family: var(--font-data);
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}
+
+.shareHint {
+  font-family: var(--font-data);
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  word-break: break-all;
+}
+
+/* El código en sí, resaltado — pedido explícito del usuario (2026-07-24):
+   antes vivía interpolado dentro de `.shareHint` (mismo gris atenuado que
+   el resto de la oración) y se perdía. Ahora es su propio elemento: grande,
+   monoespaciado con espaciado entre letras, marco brillante en el color de
+   acento del Sol. */
+.roomCode {
+  align-self: center;
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 1.6rem;
+  letter-spacing: 0.28em;
+  color: var(--sun-core);
+  background: var(--bg-space-deep);
+  border: 2px solid var(--sun-core);
+  border-radius: var(--radius-pill);
+  padding: 10px 20px;
+  text-align: center;
+  text-shadow: 0 0 16px rgba(255, 201, 60, 0.5);
+  word-break: break-all;
+}
+
+.error {
+  color: #ff6a8a;
+  font-size: 0.9rem;
+}
+
+.openRooms {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.roomList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.roomListItem {
+  background: var(--bg-space-deep);
+  border-radius: var(--radius-pill);
+  padding: 8px 8px 8px 16px;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.roomCode {
+  font-family: var(--font-data);
+  color: var(--ink);
+  letter-spacing: 0.08em;
+}
+
+.roomCount {
+  font-family: var(--font-data);
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+}
+
+.roomListItem .secondaryButton {
+  padding: 6px 14px;
+  font-size: 0.85rem;
+}
+
+.roomListItem .secondaryButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

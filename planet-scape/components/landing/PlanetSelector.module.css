@@ -1,0 +1,293 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 48px 20px 80px;
+  text-align: center;
+}
+
+.heading {
+  font-size: clamp(1.5rem, 4vw, 2.1rem);
+  color: var(--ink);
+}
+
+.hint {
+  max-width: 52ch;
+  color: var(--ink-muted);
+  font-size: 0.95rem;
+  margin-bottom: 32px;
+}
+
+/* Carrusel elíptico — pedido explícito del usuario (2026-07-22): rotable
+   pasando el mouse encima (parallax) y/o dando clic y arrastrando; el
+   planeta al frente del óvalo es el candidato a elegir, los demás se
+   encogen y apagan hacia el fondo. Ver PlanetSelector.tsx para la física. */
+.carouselViewport {
+  position: relative;
+  width: min(920px, 100%);
+  height: clamp(230px, 34vw, 340px);
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.carouselViewport[data-dragging="true"] {
+  cursor: grabbing;
+}
+
+.planetButton {
+  appearance: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--radius-card);
+  will-change: transform, opacity;
+}
+
+.planetButton:focus-visible {
+  outline: 2px solid var(--ring-color, var(--sun-core));
+  outline-offset: 4px;
+}
+
+.planetButton[data-selected="true"] {
+  background: var(--bg-card-hover);
+  box-shadow: 0 0 0 3px var(--ring-color, var(--sun-core));
+}
+
+.planetName {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.ctaArea {
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 36px;
+}
+
+.ctaCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  animation: pop 0.3s ease-out both;
+}
+
+.selectedLabel {
+  font-family: var(--font-data);
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}
+
+.playButton {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #2a1200;
+  background: linear-gradient(135deg, var(--sun-core), var(--sun-flare));
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 14px 36px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(255, 106, 61, 0.35);
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Planetas premium (Júpiter/Saturno) — ver AGENTS.md §5/§9 */
+.planetButton[data-locked="true"] {
+  opacity: 0.7;
+}
+
+.planetButton[data-locked="true"]:hover,
+.planetButton[data-locked="true"]:focus-visible {
+  opacity: 1;
+}
+
+.premiumWrap {
+  position: relative;
+}
+
+.lockBadge {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-space-deep);
+  border: 1px solid rgba(201, 207, 255, 0.3);
+  border-radius: var(--radius-pill);
+  padding: 3px 10px;
+  font-family: var(--font-data);
+  font-size: 0.72rem;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+/* Esquina superior derecha de la tarjeta: ícono ℹ️ + contador de
+   popularidad (❤️) juntos en fila — pedido explícito del usuario
+   (2026-07-24): "pon solo el icono de informacion sobre cada planeta al
+   lado izquierdo de donde sale el corazoncito de popularidad" (reemplaza el
+   botón único "Sobre {planeta}" que antes vivía debajo de todo el
+   carrusel, ver PlanetInfoModal.tsx). */
+.cornerBadges {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: flex;
+  align-items: center;
+  /* Más separación entre el ícono ℹ️ y el ❤️ — pedido explícito del usuario
+     (2026-07-24): "no lo pongas tan pegado al corazon ponlo un poco mas a
+     la izquierda", reforzado de nuevo ("todavia ponlo mas a la izquierda")
+     tras el primer ajuste a 10px. */
+  gap: 20px;
+}
+
+/* Solo en móvil: en vez de la esquina superior derecha, ambos íconos se
+   apilan centrados arriba de la cabeza del planeta — pedido explícito del
+   usuario (2026-07-24): "el icono de corazon de popularidad que se coloque
+   al centro del planeta pero arriba de su cabeza para que no tape la
+   imagen... y el icono informativo que se coloque arriba del corazon". El
+   orden en el DOM ya es ℹ️ primero, ❤️ después (ver PlanetSelector.tsx), así
+   que `flex-direction: column` ya deja el informativo arriba del corazón
+   sin reordenar nada. */
+@media (max-width: 640px) {
+  .cornerBadges {
+    top: -46px;
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    flex-direction: column;
+    gap: 6px;
+  }
+}
+
+.infoIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Agrandado — pedido explícito del usuario (2026-07-24): "has un poco mas
+     grande ese icono no tan pequeño para que se vea la imagen de la 'i' y
+     ademas puedan darle clic". */
+  width: 26px;
+  height: 26px;
+  background: var(--bg-space-deep);
+  border: 1px solid rgba(201, 207, 255, 0.4);
+  border-radius: 50%;
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.infoIcon:hover,
+.infoIcon:focus-visible {
+  background: var(--bg-card-hover);
+  border-color: var(--sun-core);
+  outline: none;
+}
+
+/* Contador de popularidad (❤️) — puramente informativo, ver AGENTS.md §2.3.
+   Ya no se posiciona solo (ver `.cornerBadges` arriba, que lo agrupa junto
+   al ícono de información). */
+.playCountBadge {
+  background: var(--bg-space-deep);
+  border: 1px solid rgba(201, 207, 255, 0.3);
+  border-radius: var(--radius-pill);
+  padding: 2px 8px;
+  font-family: var(--font-data);
+  font-size: 0.68rem;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.statusMessage {
+  margin-top: 16px;
+  color: var(--sun-core);
+  font-family: var(--font-data);
+  font-size: 0.85rem;
+  max-width: 42ch;
+}
+
+.confirmOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 8, 21, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 50;
+}
+
+.confirmCard {
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  padding: 28px;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  text-align: center;
+}
+
+.confirmText {
+  color: var(--ink);
+  font-size: 1rem;
+}
+
+.confirmActions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.confirmNo,
+.confirmYes {
+  font-family: var(--font-data);
+  font-weight: 700;
+  border-radius: var(--radius-pill);
+  padding: 10px 22px;
+  cursor: pointer;
+  border: none;
+}
+
+.confirmNo {
+  background: var(--bg-card-hover);
+  color: var(--ink);
+  border: 1px solid rgba(201, 207, 255, 0.25);
+}
+
+.confirmYes {
+  background: linear-gradient(135deg, var(--sun-core), var(--sun-flare));
+  color: #2a1200;
+}
+
+.confirmNo:disabled,
+.confirmYes:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

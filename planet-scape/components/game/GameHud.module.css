@@ -1,0 +1,452 @@
+.topBar {
+  position: absolute;
+  /* env(safe-area-inset-*) evita que el HUD quede tapado por el notch/isla
+     dinámica o la barra de gestos en celulares reales — no es visible en
+     emuladores de escritorio, ver feedback del usuario (2026-07-22). */
+  top: calc(16px + env(safe-area-inset-top, 0px));
+  left: calc(16px + env(safe-area-inset-left, 0px));
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  pointer-events: none;
+  font-family: var(--font-data);
+}
+
+.stat {
+  background: var(--bg-card);
+  border-radius: var(--radius-pill);
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lives {
+  color: #ff6a8a;
+}
+
+.starCount {
+  color: var(--sun-core);
+}
+
+.levelBadge {
+  color: var(--star-dust);
+}
+
+/* Marcador de equipo (2026-07-23, ver AGENTS.md §8) — pedido explícito del
+   usuario: "es como el marcador de cuantos agujeros negros hemos derrotado
+   entre todos". Siempre visible en multijugador, sin necesitar desplegar
+   el panel. */
+.teamProgress {
+  color: #b35cff;
+}
+
+/* Panel desplegable de vidas/estrellas del equipo — pedido explícito del
+   usuario: "una opcion que aunque esten jugando puedas ver las vidas y
+   estrellas que tiene cada jugador como informativo". Translúcida y movible
+   — pedido explícito del usuario (2026-07-23): "que sea tambien traslucida
+   y que se pueda mover la ventana de lugar si es necesario", mismo tono
+   que ChatPanel.module.css. `position: fixed` (no `absolute`) para que las
+   coordenadas de arrastre (relativas al viewport, ver useDraggablePanel.ts)
+   coincidan siempre con la posición real del panel. */
+.teamPanel {
+  position: fixed;
+  top: calc(64px + env(safe-area-inset-top, 0px));
+  left: calc(16px + env(safe-area-inset-left, 0px));
+  width: min(260px, calc(100vw - 32px));
+  background: rgba(20, 27, 51, 0.68);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: var(--radius-card);
+  border: 1px solid rgba(201, 207, 255, 0.2);
+  overflow: hidden;
+  z-index: 15;
+}
+
+.teamPanelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--ink);
+  border-bottom: 1px solid rgba(201, 207, 255, 0.15);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.teamPanelHeader[data-dragging="true"] {
+  cursor: grabbing;
+}
+
+.closeTeamPanel {
+  background: none;
+  border: none;
+  color: var(--ink-muted);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.teamPanelRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(201, 207, 255, 0.1);
+}
+
+.teamPanelRow:last-child {
+  border-bottom: none;
+}
+
+/* Aro sutil cuando ese jugador tiene su habilidad activa ahora mismo — ver
+   AGENTS.md §8 ("quiero saber si alguien activo su habilidad"). */
+.teamPanelRow[data-active="true"] {
+  background: rgba(255, 92, 214, 0.1);
+}
+
+.teamPanelName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+  font-size: 0.82rem;
+}
+
+.teamPanelStat {
+  font-family: var(--font-data);
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.musicButton {
+  pointer-events: auto;
+  background: var(--bg-card);
+  border: none;
+  border-radius: var(--radius-pill);
+  width: 38px;
+  height: 38px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.blackHoleAlert {
+  position: absolute;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30, 10, 45, 0.85);
+  border: 2px solid #b35cff;
+  border-radius: var(--radius-pill);
+  padding: 8px 20px;
+  font-family: var(--font-data);
+  font-size: 0.85rem;
+  color: #e9d4ff;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Quasar (2026-07-24, ver AGENTS.md §5.1) — alerta/botón distintos y más
+   vistosos que el agujero negro clásico, en azul-blanco brillante en vez de
+   morado, con un resplandor pulsante propio. */
+.blackHoleAlert[data-quasar="true"] {
+  background: rgba(10, 20, 45, 0.85);
+  border-color: #7ec8ff;
+  color: #eaf6ff;
+  animation: quasarAlertGlow 1.4s ease-in-out infinite;
+}
+
+@keyframes quasarAlertGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 10px rgba(126, 200, 255, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 22px rgba(126, 200, 255, 0.75);
+  }
+}
+
+.abilityButton {
+  position: fixed;
+  /* Zona segura — ver comentario en .topBar arriba. */
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  right: calc(24px + env(safe-area-inset-right, 0px));
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  border: 3px solid var(--sun-core);
+  background: radial-gradient(circle at 35% 30%, var(--bg-card-hover), var(--bg-card));
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  /* Mantenerlo presionado en móvil no debe abrir el menú contextual nativo
+     (copiar/pegar/seleccionar) — pedido explícito del usuario (2026-07-24):
+     "dejamos presionado el boton... nos abre un menu contextual... afecta
+     la jugabilidad... tapa la pantalla". Mismo criterio en .blackHoleButton
+     de abajo. */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.abilityButton[data-phase="ready"] {
+  box-shadow: 0 0 24px rgba(77, 255, 184, 0.55);
+  border-color: #4dffb8;
+}
+
+.abilityButton[data-phase="active"] {
+  box-shadow: 0 0 24px rgba(255, 92, 214, 0.55);
+  border-color: #ff5cd6;
+}
+
+.abilityButton[data-phase="cooldown"] {
+  opacity: 0.5;
+}
+
+/* Junto al botón de habilidad (no en la esquina opuesta) — pedido explícito
+   del usuario (2026-07-24): en móvil, la esquina inferior izquierda choca
+   con el botón/indicador propio de Next.js en modo desarrollo, impidiendo
+   jugar ("no permite la jugabilidad"). Se mueve al lado del botón de
+   habilidad, a la izquierda de este con un espacio entre ambos — siguen
+   siendo dos controles visualmente distintos (colores/bordes propios), solo
+   que ahora comparten el mismo lado de la pantalla. */
+.blackHoleButton {
+  position: fixed;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  right: calc(24px + 76px + 16px + env(safe-area-inset-right, 0px));
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  border: 3px solid #b35cff;
+  background: radial-gradient(circle at 35% 30%, rgba(179, 92, 255, 0.35), var(--bg-card));
+  box-shadow: 0 0 24px rgba(179, 92, 255, 0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  animation: blackHolePulse 1s ease-in-out infinite;
+  /* Sostenerlo presionado (ver `startBlackHoleHold` en GameHud.tsx) no debe
+     disparar el menú contextual nativo de copiar/pegar — ver comentario en
+     .abilityButton arriba. */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+@keyframes blackHolePulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+.blackHoleButton[data-quasar="true"] {
+  border-color: #7ec8ff;
+  background: radial-gradient(circle at 35% 30%, rgba(126, 200, 255, 0.4), var(--bg-card));
+  box-shadow: 0 0 26px rgba(126, 200, 255, 0.65);
+}
+
+.gameOverOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(6, 8, 21, 0.88);
+  text-align: center;
+  padding: 24px;
+  overflow-y: auto;
+  /* El contenedor del canvas (GameCanvas.module.css .wrapper) tiene
+     `touch-action: none` para que el arrastre táctil mueva al jugador
+     durante la partida — pero esta pantalla ya no es gameplay, y esa
+     propiedad se seguía heredando, bloqueando el scroll táctil aunque
+     `overflow-y: auto` esté puesto. Bug real reportado por el usuario
+     (2026-07-24): "en el modal apoyanos del boton persistente ahi si
+     aparece el whatsapp, el modal... que se abre cuando te derrotan ahi no
+     se ve la liga de whatsapp" (estaba ahí, pero no se podía llegar a él
+     con el dedo). `pan-y` permite el scroll vertical táctil sin reactivar
+     otros gestos que no hacen falta aquí. */
+  touch-action: pan-y;
+}
+
+.gameOverContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  /* Centra verticalmente cuando el contenido cabe; cuando no cabe (ej. con
+     DonationPrompt en móvil), colapsa a 0 y el scroll llega a todo el
+     contenido normalmente — ver AGENTS.md §3.1 (adaptativo PC↔Mobile). */
+  margin: auto 0;
+}
+
+.gameOverTitle {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  color: var(--ink);
+}
+
+/* Carita triste del planeta derrotado — ver AGENTS.md §5.1. Reutiliza el
+   mismo SVG de personaje del carrusel (sin arte nuevo), ligeramente
+   desaturado + una insignia 😢 encima para transmitir la derrota. */
+.defeatedPortrait {
+  position: relative;
+  display: inline-flex;
+  filter: saturate(0.55) brightness(0.85);
+}
+
+.sadBadge {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  font-size: 2rem;
+  filter: none; /* el emoji no hereda el desaturado del retrato */
+}
+
+.defeatPhrase {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--sun-core);
+  max-width: 36ch;
+  margin: -6px 0 0;
+}
+
+.gameOverBody {
+  color: var(--ink-muted);
+  max-width: 40ch;
+}
+
+.saveStatus {
+  font-family: var(--font-data);
+  font-size: 0.8rem;
+  max-width: 36ch;
+}
+
+.saveStatus[data-status="saving"] {
+  color: var(--ink-muted);
+}
+
+.saveStatus[data-status="saved"] {
+  color: #4dffb8;
+}
+
+.saveStatus[data-status="error"] {
+  color: #ff6a8a;
+}
+
+.backLink {
+  margin-top: 10px;
+  font-family: var(--font-data);
+  font-weight: 700;
+  color: #2a1200;
+  background: linear-gradient(135deg, var(--sun-core), var(--sun-flare));
+  border-radius: var(--radius-pill);
+  padding: 12px 28px;
+}
+
+/* Botón flotante solo en dispositivos táctiles — ver AGENTS.md §5 */
+@media (max-width: 900px), (pointer: coarse) {
+  .abilityButton,
+  .blackHoleButton {
+    display: flex;
+  }
+}
+
+/* Salir de la partida en curso — pedido explícito del usuario (2026-07-22),
+   antes solo existía el enlace de "volver al menú" en la pantalla de fin de
+   partida. Confirmación propia (nunca window.confirm) — ver AGENTS.md §12.11. */
+.exitButton {
+  pointer-events: auto;
+  background: var(--bg-card);
+  border: none;
+  border-radius: var(--radius-pill);
+  width: 38px;
+  height: 38px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.exitButton:hover {
+  color: #ff6a8a;
+}
+
+.exitConfirmOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(6, 8, 21, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 20;
+}
+
+.exitConfirmCard {
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  padding: 28px;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  text-align: center;
+}
+
+.exitConfirmText {
+  color: var(--ink);
+  font-size: 1rem;
+}
+
+.exitConfirmActions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.exitConfirmNo,
+.exitConfirmYes {
+  font-family: var(--font-data);
+  font-weight: 700;
+  border-radius: var(--radius-pill);
+  padding: 10px 22px;
+  cursor: pointer;
+  border: none;
+}
+
+.exitConfirmNo {
+  background: var(--bg-card-hover);
+  color: var(--ink);
+  border: 1px solid rgba(201, 207, 255, 0.25);
+}
+
+.exitConfirmYes {
+  background: linear-gradient(135deg, var(--sun-core), var(--sun-flare));
+  color: #2a1200;
+}

@@ -1,0 +1,46 @@
+/* Fila propia (no la `.row` de LeaderboardWidget.module.css, pensada para
+   un solo nombre) — esta necesita espacio para varios jugadores a la vez,
+   así que permite envolver en más de una línea en pantallas angostas. */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  padding: 10px 16px;
+}
+
+.participants {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.participant {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* El alias del líder (quien creó la sala) va resaltado — pedido explícito
+   del usuario (2026-07-23): "de nombre debe de salir el alias del lider...
+   en resaltado y el resto de alias de los demas participantes pero solo
+   resalta el del lider". */
+.participantName {
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.participant[data-leader="true"] .participantName {
+  color: var(--sun-core);
+  font-weight: 700;
+}

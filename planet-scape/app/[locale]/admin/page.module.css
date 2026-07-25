@@ -1,0 +1,39 @@
+.gate {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: radial-gradient(ellipse at 50% 0%, var(--bg-card) 0%, var(--bg-space) 60%, var(--bg-space-deep) 100%);
+}
+
+.gateCard {
+  width: 100%;
+  max-width: 420px;
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  padding: 32px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gateTitle {
+  font-size: 1.4rem;
+  color: var(--ink);
+}
+
+.gateBody {
+  color: var(--ink-muted);
+  font-size: 0.95rem;
+}
+
+/* Selector "ver como jugador/admin" (ver AdminViewToggle.tsx) — fijo arriba
+   a la derecha para poder volver a "Admin" sin salir de esta pantalla,
+   incluso viendo el propio gate de "No autorizado" simulado. */
+.toggleWrap {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+}

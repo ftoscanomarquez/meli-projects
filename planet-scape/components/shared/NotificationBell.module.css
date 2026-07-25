@@ -1,0 +1,85 @@
+.wrapper {
+  position: relative;
+}
+
+.bellButton {
+  background: var(--bg-card-hover);
+  border: none;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ff6a8a;
+  color: #2a0812;
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 0.62rem;
+  border-radius: 50%;
+  min-width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(280px, 90vw);
+  max-height: 320px;
+  overflow-y: auto;
+  background: var(--bg-card);
+  border: 1px solid rgba(201, 207, 255, 0.2);
+  border-radius: var(--radius-card);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  /* Mismo criterio que el resto de overlays de la landing (2026-07-24) —
+     el carrusel de planetas usa z-index hasta 100. */
+  z-index: 200;
+}
+
+.empty {
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+  text-align: center;
+  margin: 8px 0;
+}
+
+.entry {
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  background: var(--bg-space-deep);
+  border-radius: 12px;
+}
+
+.entryKind {
+  font-size: 1rem;
+}
+
+.entryMessage {
+  color: var(--ink);
+  font-size: 0.82rem;
+  line-height: 1.4;
+  margin: 0 0 4px;
+}
+
+.entryDate {
+  color: var(--ink-muted);
+  font-size: 0.68rem;
+}

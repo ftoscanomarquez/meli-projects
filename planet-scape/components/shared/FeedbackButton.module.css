@@ -1,0 +1,214 @@
+.floatingButton {
+  position: fixed;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  left: calc(20px + env(safe-area-inset-left, 0px));
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--ink);
+  background: var(--bg-card);
+  border: 1px solid rgba(201, 207, 255, 0.25);
+  border-radius: var(--radius-pill);
+  padding: 12px 18px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(6, 8, 21, 0.35);
+}
+
+.floatingButton:hover {
+  background: var(--bg-card-hover);
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 8, 21, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  /* El carrusel de planetas usa z-index hasta 100 para la tarjeta al
+     frente — mismo bug ya encontrado en otros modales de la landing
+     (2026-07-24, ver PlanetInfoModal.module.css/DonationButton.module.css). */
+  z-index: 200;
+  overflow-y: auto;
+}
+
+.modalContent {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  margin: auto;
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.closeButton {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-card-hover);
+  color: var(--ink);
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Pestañas Comentario/Denuncia — pedido explícito del usuario (2026-07-23):
+   "colocalo como parte de comentarios una opcion para denunciar acoso". */
+.modeTabs {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.modeTab {
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  background: var(--bg-space-deep);
+  border: 1px solid rgba(201, 207, 255, 0.2);
+  border-radius: var(--radius-pill);
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.modeTab[data-active="true"] {
+  color: var(--ink);
+  border-color: var(--sun-core);
+  background: var(--bg-card-hover);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fieldLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--font-data);
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+}
+
+.textInput {
+  background: var(--bg-space-deep);
+  border: 1px solid rgba(201, 207, 255, 0.25);
+  border-radius: 10px;
+  color: var(--ink);
+  padding: 9px 12px;
+  font-size: 0.88rem;
+  font-family: inherit;
+}
+
+.dateTimeRow {
+  display: flex;
+  gap: 10px;
+}
+
+.dateTimeRow .fieldLabel {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  color: var(--ink);
+  font-size: 1.1rem;
+  text-align: center;
+  margin: 0;
+}
+
+.hint {
+  color: var(--ink-muted);
+  font-size: 0.82rem;
+  text-align: center;
+  margin: 0;
+}
+
+.sentimentRow {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.sentimentOption {
+  font-family: var(--font-data);
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  background: var(--bg-space-deep);
+  border: 1px solid rgba(201, 207, 255, 0.2);
+  border-radius: var(--radius-pill);
+  padding: 6px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sentimentOption[data-active="true"] {
+  color: var(--ink);
+  border-color: var(--sun-core);
+  background: var(--bg-card-hover);
+}
+
+.textarea {
+  background: var(--bg-space-deep);
+  border: 1px solid rgba(201, 207, 255, 0.25);
+  border-radius: 12px;
+  color: var(--ink);
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.submitButton {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: #2a1200;
+  background: linear-gradient(135deg, var(--sun-core), var(--sun-flare));
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 12px 24px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.successText {
+  color: #4dffb8;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.errorText {
+  color: #ff6a8a;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .floatingButton {
+    padding: 10px 16px;
+    font-size: 0.75rem;
+  }
+}

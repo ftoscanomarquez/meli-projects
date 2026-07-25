@@ -1,0 +1,111 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 8, 21, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  /* Estandarizado a 200 junto con el resto de modales de la landing
+     (2026-07-24) — ver PlanetInfoModal.module.css. */
+  z-index: 200;
+}
+
+.card {
+  position: relative;
+  width: min(380px, 100%);
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  padding: clamp(20px, 4vw, 28px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.closeButton {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-card-hover);
+  color: var(--ink);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--ink);
+  text-align: center;
+  margin: 0;
+}
+
+.hint {
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+  text-align: center;
+  margin: 0 0 4px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-family: var(--font-data);
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.input {
+  background: var(--bg-space-deep);
+  border: 1px solid rgba(201, 207, 255, 0.25);
+  border-radius: 12px;
+  color: var(--ink);
+  padding: 10px 14px;
+  font-size: 0.9rem;
+}
+
+.submitButton {
+  margin-top: 4px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #2a1200;
+  background: linear-gradient(135deg, var(--sun-core), var(--sun-flare));
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 12px 20px;
+  cursor: pointer;
+}
+
+.submitButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.resultOk {
+  color: #4dffb8;
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+.resultError {
+  color: #ff6a8a;
+  font-size: 0.88rem;
+  text-align: center;
+}

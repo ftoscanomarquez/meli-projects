@@ -1,0 +1,103 @@
+/* Planet Scape — sistema de diseño (ver AGENTS.md §1.1 y §3, frontend-design skill).
+   El juego vive siempre en el espacio profundo: no hay modo claro, es una
+   decisión deliberada, no un olvido. */
+
+:root {
+  /* Paleta — nombrada, derivada de la investigación real de SolarBalls */
+  --bg-space: #0b0e1f;
+  --bg-space-deep: #060815;
+  --bg-card: #141b33;
+  --bg-card-hover: #1b2444;
+  --sun-core: #ffc93c;
+  --sun-flare: #ff6a3d;
+  --star-dust: #c9cfff;
+  --ink: #f5f7ff;
+  --ink-muted: #9ba3d4;
+
+  /* Colores propios de cada personaje — solo se usan en su propia tarjeta */
+  --mercury: #b98356;
+  --mercury-dark: #7a5636;
+  --venus: #e4592a;
+  --venus-stripe: #f4c430;
+  --earth: #2e6fe0;
+  --earth-land: #3fa34d;
+  --mars: #c1440e;
+  --mars-dark: #7a2c0a;
+  --jupiter: #d9a066;
+  --jupiter-band: #a8703c;
+  --jupiter-spot: #c1440e;
+  --saturn: #e8c778;
+  --saturn-ring: #c9a76a;
+  --neptune: #3c6fd8;
+  --neptune-glow: #5ec8ff;
+
+  --font-display: var(--font-baloo), "Baloo 2", ui-rounded, sans-serif;
+  --font-body: var(--font-inter), "Inter", system-ui, sans-serif;
+  --font-data: var(--font-mono), "JetBrains Mono", ui-monospace, monospace;
+
+  --radius-pill: 999px;
+  --radius-card: 28px;
+
+  color-scheme: dark;
+}
+
+html {
+  height: 100%;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100%;
+  color: var(--ink);
+  background: var(--bg-space);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* Foco visible obligatorio (frontend-design: "quality floor") */
+:focus-visible {
+  outline: 3px solid var(--sun-core);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,116 @@
+.inlineButton {
+  pointer-events: auto;
+  background: var(--bg-card);
+  border: none;
+  border-radius: var(--radius-pill);
+  width: 38px;
+  height: 38px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Arriba a la izquierda (no abajo-derecha como antes) para no chocar con el
+   widget de sesión (arriba-derecha, ver AuthStatus.module.css) — pedido
+   explícito del usuario (2026-07-22): "un botón arriba flotante que aunque
+   hagas scroll hacia abajo no se quite". `position: fixed` ya lo mantiene
+   fijo en pantalla sin importar el scroll (relativo al viewport, no al
+   documento) — verificado real con scroll hasta el fondo de la landing. */
+.floatingButton {
+  position: fixed;
+  top: calc(16px + env(safe-area-inset-top, 0px));
+  left: calc(16px + env(safe-area-inset-left, 0px));
+  /* El carrusel de planetas (PlanetSelector.module.css) usa z-index hasta
+     100 para la tarjeta al frente — bug real reportado por el usuario
+     (2026-07-24): "en mobile cuando recorres el carrucel el boton de
+     Apoyanos queda detras". Antes 15, muy por debajo de eso; subido a 150,
+     cómodamente por encima del carrusel pero por debajo de cualquier
+     overlay/modal (200). */
+  z-index: 150;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: #2a1200;
+  background: linear-gradient(135deg, var(--sun-core), var(--sun-flare));
+  border: 2px solid var(--sun-core);
+  border-radius: var(--radius-pill);
+  padding: 12px 18px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(255, 106, 61, 0.35);
+  /* Borde/resplandor parpadeante "invitando a donar" — pedido explícito del
+     usuario (2026-07-24): "ponle como un borde que contraste y parpadee
+     como invitando a la gente a que haga una donacion". */
+  animation: invitePulse 1.8s ease-in-out infinite;
+}
+
+@keyframes invitePulse {
+  0%,
+  100% {
+    border-color: var(--sun-core);
+    box-shadow: 0 8px 24px rgba(255, 106, 61, 0.35), 0 0 0 0 rgba(255, 201, 60, 0.55);
+  }
+  50% {
+    border-color: var(--ink);
+    box-shadow: 0 8px 24px rgba(255, 106, 61, 0.35), 0 0 0 6px rgba(255, 201, 60, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .floatingButton {
+    animation: none;
+  }
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 8, 21, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  /* El carrusel de planetas (PlanetSelector.module.css) usa z-index hasta
+     100 para la tarjeta al frente — bug real reportado por el usuario
+     (2026-07-24): "el modal o ventana de donacion cuando se abre queda
+     atras del carrucel". Mismo valor que el resto de modales de la landing
+     (PlanetInfoModal.module.css, etc.) para quedar siempre por encima. */
+  z-index: 200;
+  overflow-y: auto;
+}
+
+.modalContent {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  margin: auto;
+}
+
+.closeButton {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-card-hover);
+  color: var(--ink);
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+@media (max-width: 640px) {
+  .floatingButton {
+    padding: 10px 16px;
+    font-size: 0.75rem;
+  }
+}

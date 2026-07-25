@@ -1,0 +1,234 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 8, 21, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  /* El carrusel de planetas usa z-index hasta 100 para la tarjeta al
+     frente — bug real reportado por el usuario (2026-07-24): "todos los
+     modales tambien el de mi perfil queda atras del carrucel". Mismo valor
+     que el resto de modales de la landing. */
+  z-index: 200;
+  overflow-y: auto;
+}
+
+.card {
+  position: relative;
+  width: min(440px, 100%);
+  max-height: 85vh;
+  overflow-y: auto;
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  padding: clamp(20px, 4vw, 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: auto;
+}
+
+.closeButton {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-card-hover);
+  color: var(--ink);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  color: var(--ink);
+  text-align: center;
+  margin: 0;
+}
+
+.hint {
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.lockedSection {
+  background: var(--bg-space-deep);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sensitiveNotice {
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.lockedGrid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  font-size: 0.85rem;
+}
+
+.lockedLabel {
+  font-family: var(--font-data);
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  align-self: center;
+}
+
+.lockedValue {
+  color: var(--ink);
+}
+
+.changeRequestForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(255, 106, 138, 0.08);
+  border: 1px solid rgba(255, 106, 138, 0.25);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.checkboxRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--ink);
+}
+
+.textarea {
+  background: var(--bg-space-deep);
+  border: 1px solid rgba(201, 207, 255, 0.25);
+  border-radius: 12px;
+  color: var(--ink);
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  min-height: 60px;
+  resize: vertical;
+}
+
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-family: var(--font-data);
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.input {
+  background: var(--bg-space-deep);
+  border: 1px solid rgba(201, 207, 255, 0.25);
+  border-radius: 12px;
+  color: var(--ink);
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  width: 100%;
+}
+
+.aliasRow {
+  display: flex;
+  gap: 8px;
+}
+
+.aliasRow .input {
+  flex: 1;
+  min-width: 0;
+}
+
+.validateButton {
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 0.78rem;
+  color: var(--ink);
+  background: var(--bg-card-hover);
+  border: 1px solid rgba(201, 207, 255, 0.25);
+  border-radius: 12px;
+  padding: 0 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.validateButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.linkButton {
+  background: none;
+  border: none;
+  color: var(--sun-core);
+  font-size: 0.78rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  align-self: flex-start;
+}
+
+.submitButton {
+  margin-top: 4px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #2a1200;
+  background: linear-gradient(135deg, var(--sun-core), var(--sun-flare));
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 12px 20px;
+  cursor: pointer;
+}
+
+.submitButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.successText {
+  color: #4dffb8;
+  font-size: 0.82rem;
+  margin: -4px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.errorText {
+  color: #ff6a8a;
+  font-size: 0.82rem;
+  margin: -4px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}

@@ -1,0 +1,47 @@
+.page {
+  position: relative;
+  min-height: 100dvh;
+  overflow: hidden;
+  background:
+    radial-gradient(1.5px 1.5px at 20% 30%, var(--star-dust) 100%, transparent),
+    radial-gradient(1.5px 1.5px at 70% 15%, var(--star-dust) 100%, transparent),
+    radial-gradient(1px 1px at 40% 70%, var(--star-dust) 100%, transparent),
+    radial-gradient(1.5px 1.5px at 85% 60%, var(--star-dust) 100%, transparent),
+    radial-gradient(1px 1px at 10% 85%, var(--star-dust) 100%, transparent),
+    radial-gradient(1.5px 1.5px at 55% 45%, var(--star-dust) 100%, transparent),
+    radial-gradient(1px 1px at 92% 90%, var(--star-dust) 100%, transparent),
+    radial-gradient(1.5px 1.5px at 30% 95%, var(--star-dust) 100%, transparent),
+    radial-gradient(ellipse at 50% -10%, var(--bg-card) 0%, var(--bg-space) 55%, var(--bg-space-deep) 100%);
+  background-size:
+    200px 200px,
+    240px 240px,
+    180px 180px,
+    260px 260px,
+    220px 220px,
+    190px 190px,
+    250px 250px,
+    210px 210px,
+    100% 100%;
+}
+
+/* Top 10 individual a la izquierda, Top 10 de equipos a la derecha, misma
+   fila en escritorio — pedido explícito del usuario (2026-07-24). En móvil
+   se apila (individual arriba, equipo abajo — mismo orden que ya tenían en
+   el DOM, ver page.tsx). `RoomLeaderboardWidget` puede no renderizar nada
+   (sala sin récords aún); `justify-content: center` deja el individual
+   centrado solo cuando eso pasa. */
+.leaderboardsRow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (min-width: 900px) {
+  .leaderboardsRow {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 24px;
+  }
+}

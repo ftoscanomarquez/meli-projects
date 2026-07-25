@@ -1,0 +1,175 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 8, 21, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  /* El carrusel de planetas (PlanetSelector.module.css) usa z-index hasta
+     100 para la tarjeta al frente (`Math.round(depth * 100)`) — bug real
+     encontrado en pruebas (2026-07-23): con z-index: 60 aquí, el planeta al
+     frente se renderizaba ENCIMA de este modal. 200 queda cómodamente por
+     encima de cualquier z-index del carrusel. */
+  z-index: 200;
+  overflow-y: auto;
+}
+
+.modal {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  margin: auto;
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  padding: clamp(20px, 4vw, 28px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+/* Rediseñado para que resalte de verdad — pedido explícito del usuario
+   (2026-07-24): "casi no se ve el boton de cierre". Antes: fondo oscuro
+   (`--bg-card-hover`) flotando FUERA de la tarjeta, sobre el overlay
+   semitransparente casi negro — muy poco contraste con cualquiera de los
+   dos fondos oscuros. Ahora: adentro de la tarjeta, con el mismo degradado
+   Sol brillante que ya usan los botones importantes de la app (ej.
+   submitButton en AuthStatus.module.css) y texto oscuro encima. */
+.closeButton {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, var(--sun-core), var(--sun-flare));
+  color: #2a1200;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  color: var(--ink);
+  text-align: center;
+  margin: 0;
+  padding-right: 40px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionTitle {
+  font-family: var(--font-data);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--star-dust);
+  margin: 0;
+  border-bottom: 1px solid rgba(201, 207, 255, 0.15);
+  padding-bottom: 6px;
+}
+
+.factRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.85rem;
+}
+
+.factLabel {
+  color: var(--ink-muted);
+  flex-shrink: 0;
+}
+
+.factValue {
+  color: var(--ink);
+  text-align: right;
+}
+
+.subTitle {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  margin: 4px 0 0;
+}
+
+.factList {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--ink);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.abilityCard {
+  background: var(--bg-space-deep);
+  border: 1px solid rgba(201, 207, 255, 0.15);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.abilityHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.abilityTag {
+  font-family: var(--font-data);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--sun-core);
+}
+
+.abilityName {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+.abilityDescription {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.scopeBadge {
+  align-self: flex-start;
+  font-family: var(--font-data);
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: var(--radius-pill);
+  padding: 4px 10px;
+}
+
+.scopeBadge[data-scope="team"] {
+  color: #4dffb8;
+  background: rgba(77, 255, 184, 0.12);
+}
+
+.scopeBadge[data-scope="individual"] {
+  color: var(--ink-muted);
+  background: rgba(201, 207, 255, 0.1);
+}

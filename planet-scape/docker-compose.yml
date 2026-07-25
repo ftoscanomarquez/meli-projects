@@ -1,0 +1,25 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: planet-scape-mongo
+    restart: unless-stopped
+    ports:
+      - "27019:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: magiclink123
+    volumes:
+      - mongo_data:/data/db
+
+  mailpit:
+    image: axllent/mailpit
+    container_name: planet-scape-mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025" # UI
+      - "1025:1025" # SMTP
+    environment:
+      MP_SMTP_AUTH: "admin:magiclink123"
+
+volumes:
+  mongo_data:

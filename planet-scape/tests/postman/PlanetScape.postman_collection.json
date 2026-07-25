@@ -1,0 +1,425 @@
+{
+  "info": {
+    "_postman_id": "6f2c9f4a-6e2e-4b3a-9f7d-2a7c1c0e4d1a",
+    "name": "Planet Scape API",
+    "description": "Colección Postman/Newman de la API real de Planet Scape — ver AGENTS.md §11. La autenticación es por Magic Link (Auth.js), no usuario/contraseña ni API key: la carpeta '0. Auth (setup)' obtiene el token CSRF, dispara el correo real, lo lee de la API de Mailpit y establece la cookie de sesión real — el resto de la colección la reutiliza automáticamente (jar de cookies compartido por la corrida). El folder 'Admin' asume por defecto una cuenta NO promovida (verifica que /api/admin/* rechace con 403); para probar el camino feliz de admin, promover `{{testEmail}}` con `npm run seed:admin -- --email=...` antes de correr la colección y poner `isAdminPromoted=true` en el entorno. ⚠️ La carpeta '0. Auth (setup)' depende de Mailpit (ver AGENTS.md §6.1) y por lo tanto SOLO funciona contra el entorno Local — Mailpit no existe en producción (correo real). Contra el entorno de Producción, correr solo las carpetas '1. Health' y '2. Leaderboard' (públicas, sin sesión) con `--folder`; las carpetas autenticadas requieren capturar manualmente la cookie de sesión de un login real de producción y pegarla en una variable de entorno, no están automatizadas ahí.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.collectionVariables.get('testEmail')) {",
+          "  const email = `postman-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`;",
+          "  pm.collectionVariables.set('testEmail', email);",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "csrfToken", "value": "" },
+    { "key": "testEmail", "value": "" },
+    { "key": "magicLinkUrl", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "0. Auth (setup)",
+      "item": [
+        {
+          "name": "Get CSRF Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/auth/csrf", "host": ["{{baseUrl}}"], "path": ["api", "auth", "csrf"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK con csrfToken', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.csrfToken).to.be.a('string').and.not.empty;",
+                  "  pm.collectionVariables.set('csrfToken', body.csrfToken);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Request Magic Link",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/x-www-form-urlencoded" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/signin/nodemailer",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "signin", "nodemailer"]
+            },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "email", "value": "{{testEmail}}" },
+                { "key": "csrfToken", "value": "{{csrfToken}}" },
+                { "key": "callbackUrl", "value": "{{baseUrl}}/es" },
+                { "key": "json", "value": "true" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Auth.js aceptó la solicitud (200 con json=true)', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Poll Mailpit for the real Magic Link email",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Basic {{mailpitAuthBase64}}" }],
+            "url": {
+              "raw": "{{mailpitUrl}}/api/v1/messages?limit=20",
+              "host": ["{{mailpitUrl}}"],
+              "path": ["api", "v1", "messages"],
+              "query": [{ "key": "limit", "value": "20" }]
+            },
+            "description": "Reintenta hasta 20 veces (con espera) hasta que el correo real llegue a Mailpit — nunca simula el login, igual que la suite de Playwright (ver tests/e2e/helpers/auth.ts)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const authHeader = 'Basic ' + pm.variables.get('mailpitAuthBase64');",
+                  "const email = pm.collectionVariables.get('testEmail');",
+                  "",
+                  "function fetchJson(url) {",
+                  "  return new Promise((resolve, reject) => {",
+                  "    pm.sendRequest({ url, method: 'GET', header: { Authorization: authHeader } }, (err, res) => {",
+                  "      if (err) return reject(err);",
+                  "      resolve(res.json());",
+                  "    });",
+                  "  });",
+                  "}",
+                  "",
+                  "function wait(ms) { return new Promise((r) => setTimeout(r, ms)); }",
+                  "",
+                  "async function findMagicLink() {",
+                  "  for (let i = 0; i < 20; i++) {",
+                  "    const list = await fetchJson(pm.variables.get('mailpitUrl') + '/api/v1/messages?limit=20');",
+                  "    const msg = (list.messages || []).find((m) => (m.To || []).some((t) => t.Address === email));",
+                  "    if (msg) {",
+                  "      const detail = await fetchJson(pm.variables.get('mailpitUrl') + '/api/v1/message/' + msg.ID);",
+                  "      const match = detail.HTML.match(/href=\"([^\"]*api\\/auth\\/callback\\/nodemailer[^\"]*)\"/);",
+                  "      if (match) return match[1].replace(/&amp;/g, '&').replace(/&#x3D;/g, '=');",
+                  "    }",
+                  "    await wait(600);",
+                  "  }",
+                  "  throw new Error('No llegó el correo de Magic Link para ' + email);",
+                  "}",
+                  "",
+                  "return findMagicLink().then((link) => {",
+                  "  pm.collectionVariables.set('magicLinkUrl', link);",
+                  "  pm.test('Se encontró el enlace real de Magic Link en Mailpit', function () {",
+                  "    pm.expect(link).to.include('/api/auth/callback/nodemailer');",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Follow Magic Link (establishes real session cookie)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{magicLinkUrl}}",
+            "description": "Postman/Newman siguen la redirección y guardan la cookie de sesión de Auth.js en el jar compartido de la corrida — el resto de la colección queda autenticada como {{testEmail}}. URL como string plano (no objeto raw/host/path): con solo `raw` sin desglosar, Newman falla a veces al resolver una variable que aún no existía cuando se cargó la colección ('request url is empty')."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('El callback de Auth.js resuelve a una página 200 (sesión creada)', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1. Health",
+      "item": [
+        {
+          "name": "GET /api/health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/health", "host": ["{{baseUrl}}"], "path": ["api", "health"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK y Mongo healthy', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.status).to.eql('ok');",
+                  "  pm.expect(body.checks.mongo).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Leaderboard",
+      "item": [
+        {
+          "name": "GET /api/leaderboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/leaderboard", "host": ["{{baseUrl}}"], "path": ["api", "leaderboard"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK, público, sin sesión requerida', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.entries).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Game Sessions",
+      "item": [
+        {
+          "name": "POST /api/sessions/complete (happy path)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions/complete",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sessions", "complete"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"planet\": \"mercury\", \"level\": 2, \"starsCollected\": 5}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK con el esquema esperado', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('totalStars');",
+                  "  pm.expect(body).to.have.property('score');",
+                  "  pm.expect(body).to.have.property('leaderboardUpdated');",
+                  "  pm.expect(body.score).to.eql(205);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/sessions/complete (payload inválido -> 400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions/complete",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sessions", "complete"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"planet\": \"jupiter\", \"level\": -1, \"starsCollected\": 0}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 con { error, code } estandarizado', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('error');",
+                  "  pm.expect(body).to.have.property('code');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Donations (Stripe)",
+      "item": [
+        {
+          "name": "POST /api/donations/checkout (monto dentro de rango)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/donations/checkout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "donations", "checkout"]
+            },
+            "body": { "mode": "raw", "raw": "{\"amountCents\": 15000}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK con una URL real de Stripe Checkout', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.url).to.include('checkout.stripe.com');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/donations/checkout (monto fuera de rango -> 400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/donations/checkout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "donations", "checkout"]
+            },
+            "body": { "mode": "raw", "raw": "{\"amountCents\": 1}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 - por debajo del mínimo de game_config.donation', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Admin",
+      "item": [
+        {
+          "name": "GET /api/admin/config",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/admin/config", "host": ["{{baseUrl}}"], "path": ["api", "admin", "config"] },
+            "description": "Por defecto {{testEmail}} NO es admin: se espera 403. Para probar el camino feliz, promover la cuenta con `npm run seed:admin -- --email=<testEmail>` antes de correr la colección y poner `isAdminPromoted=true` en el entorno."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const isAdmin = pm.environment.get('isAdminPromoted') === 'true';",
+                  "if (isAdmin) {",
+                  "  pm.test('200 OK con el GameConfig real', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('blackHole');",
+                  "    pm.expect(body).to.have.property('donation');",
+                  "  });",
+                  "} else {",
+                  "  pm.test('403 - cuenta autenticada pero sin rol admin (guard real, no solo de UI)', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.code).to.eql('FORBIDDEN');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/admin/players (sin rol admin -> 403)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/players?search=a",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "players"],
+              "query": [{ "key": "search", "value": "a" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const isAdmin = pm.environment.get('isAdminPromoted') === 'true';",
+                  "pm.test(isAdmin ? '200 OK' : '403 - guard real de admin', function () {",
+                  "  pm.response.to.have.status(isAdmin ? 200 : 403);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

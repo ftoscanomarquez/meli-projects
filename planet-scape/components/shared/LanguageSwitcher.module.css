@@ -1,0 +1,12 @@
+.button {
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 0.78rem;
+  color: var(--ink);
+  background: var(--bg-card-hover);
+  border: 1px solid rgba(201, 207, 255, 0.25);
+  border-radius: var(--radius-pill);
+  padding: 8px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}

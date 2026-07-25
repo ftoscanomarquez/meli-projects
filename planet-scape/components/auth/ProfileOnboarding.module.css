@@ -1,0 +1,217 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 8, 21, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  /* El carrusel de planetas usa z-index hasta 100 — con el mismo valor
+     aquí, cuál gana dependía del orden en el DOM (frágil). Subido para
+     quedar siempre por encima, mismo criterio que el resto de modales de
+     la landing (2026-07-24). */
+  z-index: 200;
+  overflow-y: auto;
+}
+
+.card {
+  position: relative;
+  width: min(420px, 100%);
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  padding: clamp(20px, 4vw, 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: auto;
+}
+
+.closeButton {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-card-hover);
+  color: var(--ink);
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(1.3rem, 4vw, 1.6rem);
+  color: var(--ink);
+  text-align: center;
+  margin: 0;
+}
+
+.hint {
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+  text-align: center;
+  margin: 0 0 6px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-family: var(--font-data);
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.optionalTag {
+  text-transform: none;
+  color: var(--ink-muted);
+  opacity: 0.7;
+  letter-spacing: normal;
+}
+
+.input {
+  background: var(--bg-space-deep);
+  border: 1px solid rgba(201, 207, 255, 0.25);
+  border-radius: 12px;
+  color: var(--ink);
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  width: 100%;
+}
+
+.aliasRow {
+  display: flex;
+  gap: 8px;
+}
+
+.aliasRow .input {
+  flex: 1;
+  min-width: 0;
+}
+
+.validateButton {
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 0.78rem;
+  color: var(--ink);
+  background: var(--bg-card-hover);
+  border: 1px solid rgba(201, 207, 255, 0.25);
+  border-radius: 12px;
+  padding: 0 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.validateButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.aliasOk {
+  color: #4dffb8;
+  font-size: 0.82rem;
+  margin: -6px 0 0;
+}
+
+.aliasError {
+  color: #ff6a8a;
+  font-size: 0.82rem;
+  margin: -6px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.suggestionButton {
+  font-family: var(--font-data);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--sun-core);
+  background: none;
+  border: 1px solid var(--sun-core);
+  border-radius: var(--radius-pill);
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+.submitButton {
+  margin-top: 8px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  color: #2a1200;
+  background: linear-gradient(135deg, var(--sun-core), var(--sun-flare));
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 13px 24px;
+  cursor: pointer;
+}
+
+.submitButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Fila del checkbox de aceptación de Términos y Condiciones — ver AGENTS.md §6.5. */
+.termsRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--ink);
+}
+
+.termsLink {
+  background: none;
+  border: none;
+  color: var(--sun-core);
+  font-size: 0.78rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  align-self: flex-start;
+  margin-top: -8px;
+}
+
+/* Modal de solo lectura de los Términos y Condiciones completos, apilado
+   sobre el propio overlay del onboarding (z-index mayor). */
+.termsOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 8, 21, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 210;
+}
+
+.termsCard {
+  width: min(560px, 100%);
+  max-height: 80vh;
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  padding: clamp(20px, 4vw, 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.termsBody {
+  overflow-y: auto;
+  white-space: pre-wrap;
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
