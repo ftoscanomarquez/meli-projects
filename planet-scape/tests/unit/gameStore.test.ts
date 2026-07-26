@@ -29,18 +29,33 @@ describe("useGameStore", () => {
     expect(useGameStore.getState().lives).toBe(9);
   });
 
-  it("reaching 0 lives via loseLife flips gameStatus to gameover", () => {
+  // "gameover" ya no se alcanza directo al perder la última vida — primero
+  // pasa por "dying" (secuencia de muerte: reacciones faciales, cuarteaduras,
+  // explosión, frase épica — ver AGENTS.md §5.3); solo `finishDeathSequence()`
+  // marca "gameover" de verdad, al terminar esa animación.
+  it("reaching 0 lives via loseLife flips gameStatus to dying (not gameover yet)", () => {
     useGameStore.getState().loseLife(10);
     expect(useGameStore.getState().lives).toBe(0);
-    expect(useGameStore.getState().gameStatus).toBe("gameover");
+    expect(useGameStore.getState().gameStatus).toBe("dying");
   });
 
-  it("setLives(0) also flips gameStatus to gameover, and back to playing if lives > 0", () => {
-    useGameStore.getState().setLives(0);
-    expect(useGameStore.getState().gameStatus).toBe("gameover");
+  it("finishDeathSequence is the only path to gameover, and records the epic phrase", () => {
+    useGameStore.getState().loseLife(10);
+    expect(useGameStore.getState().gameStatus).toBe("dying");
 
+    useGameStore.getState().finishDeathSequence("¡Volveré más brillante que nunca!");
+    expect(useGameStore.getState().gameStatus).toBe("gameover");
+    expect(useGameStore.getState().defeatPhrase).toBe("¡Volveré más brillante que nunca!");
+  });
+
+  it("setLives(0) flips gameStatus to dying; a later heal does NOT cancel the death sequence on its own", () => {
+    useGameStore.getState().setLives(0);
+    expect(useGameStore.getState().gameStatus).toBe("dying");
+
+    // Una curación tardía no debe "resucitar" al jugador por sí sola — la
+    // secuencia de muerte ya en curso solo termina vía finishDeathSequence().
     useGameStore.getState().setLives(5);
-    expect(useGameStore.getState().gameStatus).toBe("playing");
+    expect(useGameStore.getState().gameStatus).toBe("dying");
   });
 
   it("addStars accumulates across calls", () => {

@@ -1,6 +1,8 @@
-import type * as Party from "partykit/server";
+import { Server, getServerByName, type Connection, type ConnectionContext } from "partyserver";
 import type { ClientMessage, ServerMessage, RosterPlayer, DirectoryUpdate } from "./messages";
 import type { PlanetKey } from "../engine/characterSvg";
+import type Directory from "./directory";
+import type { Env } from "./worker";
 
 /**
  * Sala de partida — ver AGENTS.md §8. Solo gestiona lobby/roster y relevo
@@ -8,25 +10,32 @@ import type { PlanetKey } from "../engine/characterSvg";
  * (eso corre determinista en cada cliente a partir de `seed`, ver
  * engine/rng.ts) — evita tener que portar el motor de PixiJS a un entorno
  * sin canvas, y el servidor de la sala se mantiene simple.
+ *
+ * Migrado de "partykit" (plataforma gestionada, CLI congelado en v0.0.115,
+ * sin soporte para el requisito nuevo de Cloudflare de migraciones
+ * `new_sqlite_classes`) a "partyserver" (mismo equipo de Cloudflare, corre
+ * directo sobre Wrangler/Durable Objects nativos) — ver docs/PRE-PROD.md
+ * Fase 5. La forma de la clase es casi idéntica; los cambios reales:
+ * `extends Server<Env>` en vez de `implements Party.Server`, `this.name` en
+ * vez de `this.room.id`, `this.broadcast`/`this.getConnections()` en vez de
+ * `this.room.broadcast`/`this.room.getConnections()`, `onMessage(connection,
+ * message)` en vez de `onMessage(message, sender)`, y `getServerByName()`
+ * en vez de `room.context.parties.directory.get(id).fetch()`.
  */
 
 const MAX_PLAYERS = 4;
 const LOBBY_DURATION_MS = 180_000;
-// Los 6 planetas jugables (4 iniciales + Júpiter/Saturno, desbloqueables
-// con estrellas — ver AGENTS.md §5/§9). El servidor de sala no valida la
-// compra en sí (eso ya lo hizo /api/planets/unlock antes de llegar aquí);
-// solo evita que un valor arbitrario rompa el roster.
+// Los 7 planetas jugables (4 iniciales + Júpiter/Saturno/Neptuno,
+// desbloqueables con estrellas — ver AGENTS.md §5/§9). El servidor de sala
+// no valida la compra en sí (eso ya lo hizo /api/planets/unlock antes de
+// llegar aquí); solo evita que un valor arbitrario rompa el roster.
 const PLAYABLE_PLANETS: PlanetKey[] = ["mercury", "venus", "earth", "mars", "jupiter", "saturn", "neptune"];
 
-function send(connection: Party.Connection, message: ServerMessage) {
+function send(connection: Connection, message: ServerMessage) {
   connection.send(JSON.stringify(message));
 }
 
-function broadcast(room: Party.Room, message: ServerMessage, exclude: string[] = []) {
-  room.broadcast(JSON.stringify(message), exclude);
-}
-
-export default class GameRoom implements Party.Server {
+export default class GameRoom extends Server<Env> {
   players = new Map<string, RosterPlayer>();
   status: "lobby" | "playing" = "lobby";
   lobbyEndsAt = 0;
@@ -37,9 +46,11 @@ export default class GameRoom implements Party.Server {
   // (atribución histórica de quién creó la sala, no "quién manda ahora").
   private leaderPlayerId: string | null = null;
 
-  constructor(readonly room: Party.Room) {}
+  private broadcastMsg(message: ServerMessage, exclude: string[] = []) {
+    this.broadcast(JSON.stringify(message), exclude);
+  }
 
-  onConnect(connection: Party.Connection, ctx: Party.ConnectionContext) {
+  onConnect(connection: Connection, ctx: ConnectionContext) {
     if (this.status === "playing") {
       send(connection, { type: "roomFull" });
       connection.close(4000, "game_in_progress");
@@ -81,7 +92,7 @@ export default class GameRoom implements Party.Server {
     this.notifyDirectory();
   }
 
-  onMessage(message: string, sender: Party.Connection) {
+  onMessage(sender: Connection, message: string) {
     let data: ClientMessage;
     try {
       data = JSON.parse(message);
@@ -90,7 +101,7 @@ export default class GameRoom implements Party.Server {
     }
 
     if (data.type === "position") {
-      broadcast(this.room, { type: "position", id: sender.id, x: data.x, y: data.y }, [sender.id]);
+      this.broadcastMsg({ type: "position", id: sender.id, x: data.x, y: data.y }, [sender.id]);
     } else if (data.type === "startNow" && this.status === "lobby") {
       this.startGame();
     } else if (data.type === "jupiterShield") {
@@ -99,7 +110,7 @@ export default class GameRoom implements Party.Server {
       // lado del cliente por cercanía); si ya no está en la sala (se
       // desconectó justo antes), simplemente no llega a nadie.
       const senderInfo = this.players.get(sender.id);
-      const target = [...this.room.getConnections()].find((c) => c.id === data.targetId);
+      const target = [...this.getConnections()].find((c) => c.id === data.targetId);
       if (target && senderInfo) {
         target.send(
           JSON.stringify({
@@ -132,38 +143,37 @@ export default class GameRoom implements Party.Server {
       // A todos, incluido quien lo mandó — así todos ven exactamente el
       // mismo texto recortado/timestamp que quedó del lado del servidor, en
       // vez de que el emisor confíe en su propia copia local.
-      broadcast(this.room, chatMessage);
+      this.broadcastMsg(chatMessage);
       this.logChatMessage(senderInfo.playerId, senderInfo.displayName, trimmed);
     } else if (data.type === "faceReaction") {
       // Reacción facial al recibir daño (ver AGENTS.md §5.1) — relay
       // simple, igual que "position": cada cliente decide su propia
       // reacción localmente, el servidor solo la reenvía a los demás.
-      broadcast(this.room, { type: "faceReaction", id: sender.id, expression: data.expression }, [sender.id]);
+      this.broadcastMsg({ type: "faceReaction", id: sender.id, expression: data.expression }, [sender.id]);
     } else if (data.type === "playerDefeated") {
       // Secuencia de muerte — pedido explícito del usuario: "la explosión
       // y la frase épica también son vistas por los demás jugadores".
       const senderInfo = this.players.get(sender.id);
       if (!senderInfo) return;
-      broadcast(
-        this.room,
+      this.broadcastMsg(
         { type: "playerDefeated", id: sender.id, displayName: senderInfo.displayName, defeatPhrase: data.defeatPhrase },
         [sender.id],
       );
     } else if (data.type === "abilityState") {
       // Visibilidad de habilidad en equipo (ver AGENTS.md §8) — relay simple.
-      broadcast(this.room, { type: "abilityState", id: sender.id, active: data.active }, [sender.id]);
+      this.broadcastMsg({ type: "abilityState", id: sender.id, active: data.active }, [sender.id]);
     } else if (data.type === "playerStatus") {
       // Panel informativo de vidas/estrellas del equipo — relay simple.
-      broadcast(this.room, { type: "playerStatus", id: sender.id, lives: data.lives, stars: data.stars }, [sender.id]);
+      this.broadcastMsg({ type: "playerStatus", id: sender.id, lives: data.lives, stars: data.stars }, [sender.id]);
     } else if (data.type === "teamProgress") {
       // Nivel/marcador de agujeros negros compartido en equipo — relay
       // simple; cada cliente adopta `Math.max` para el nivel y suma +1 a su
       // contador local de agujeros negros derrotados por el equipo.
-      broadcast(this.room, { type: "teamProgress", id: sender.id, level: data.level }, [sender.id]);
+      this.broadcastMsg({ type: "teamProgress", id: sender.id, level: data.level }, [sender.id]);
     } else if (data.type === "passiveBoost") {
       // Pasiva de pulsares de Saturno compartida con TODO el equipo — relay
       // simple, ver AGENTS.md §8.2.
-      broadcast(this.room, { type: "passiveBoost", id: sender.id, pulsarSpawnBoost: data.pulsarSpawnBoost }, [sender.id]);
+      this.broadcastMsg({ type: "passiveBoost", id: sender.id, pulsarSpawnBoost: data.pulsarSpawnBoost }, [sender.id]);
     }
   }
 
@@ -178,25 +188,25 @@ export default class GameRoom implements Party.Server {
    * vivo ya se entregó igual, solo se pierde ese registro del histórico.
    */
   private logChatMessage(playerId: string, displayName: string, message: string) {
-    const appOrigin = (this.room.env?.APP_ORIGIN as string | undefined) ?? "http://localhost:3000";
-    const secret = this.room.env?.PARTYKIT_SHARED_SECRET as string | undefined;
+    const appOrigin = this.env?.APP_ORIGIN ?? "http://localhost:3000";
+    const secret = this.env?.PARTYKIT_SHARED_SECRET;
     if (!secret) return; // sin secreto configurado, no se intenta (ver party/.env)
 
     fetch(`${appOrigin}/api/chat/log`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-party-secret": secret },
-      body: JSON.stringify({ roomId: this.room.id, playerId, displayName, message }),
+      body: JSON.stringify({ roomId: this.name, playerId, displayName, message }),
     }).catch(() => {
       // Solo histórico/moderación — nunca debe tumbar el chat en vivo.
     });
   }
 
-  onClose(connection: Party.Connection) {
+  onClose(connection: Connection) {
     // `onConnect` puede cerrar una conexión rechazada (sala llena / partida
     // en curso) antes de agregarla a `players` — ese cierre no debe emitir
     // un "playerLeft" fantasma para un jugador que nunca llegó a unirse.
     if (!this.players.delete(connection.id)) return;
-    broadcast(this.room, { type: "playerLeft", id: connection.id });
+    this.broadcastMsg({ type: "playerLeft", id: connection.id });
 
     if (this.players.size === 0) {
       if (this.lobbyTimer) clearTimeout(this.lobbyTimer);
@@ -220,12 +230,12 @@ export default class GameRoom implements Party.Server {
     // "creando sesión del juego" antes de que arranque el reloj compartido
     // (deja espacio a preparar algo server-side si hiciera falta) — ver
     // AGENTS.md §8.
-    broadcast(this.room, { type: "gameStart", seed, startAt: Date.now() + 1200 });
+    this.broadcastMsg({ type: "gameStart", seed, startAt: Date.now() + 1200 });
     this.notifyDirectory();
   }
 
   private broadcastRoster() {
-    broadcast(this.room, {
+    this.broadcastMsg({
       type: "roster",
       players: Array.from(this.players.values()),
       status: this.status,
@@ -235,25 +245,25 @@ export default class GameRoom implements Party.Server {
   }
 
   /** Publica el resumen de esta sala en el party "directory" — ver AGENTS.md §8.1. */
-  private notifyDirectory() {
+  private async notifyDirectory() {
     const update: DirectoryUpdate =
       this.players.size === 0
-        ? { roomId: this.room.id, remove: true }
+        ? { roomId: this.name, remove: true }
         : {
-            roomId: this.room.id,
+            roomId: this.name,
             playerCount: this.players.size,
             maxPlayers: MAX_PLAYERS,
             status: this.status,
             planetsTaken: Array.from(this.players.values()).map((p) => p.planet),
           };
 
-    this.room.context.parties.directory
-      .get("global")
-      .fetch({ method: "POST", body: JSON.stringify(update) })
-      .catch(() => {
-        // El directorio es solo una vista de conveniencia; si falla, la
-        // sala real sigue funcionando (el chequeo de cupo en onConnect es
-        // la fuente de verdad) — ver AGENTS.md §8.1.
-      });
+    try {
+      const directoryStub = await getServerByName<Env, Directory>(this.env.DIRECTORY, "global");
+      await directoryStub.receiveUpdate(update);
+    } catch {
+      // El directorio es solo una vista de conveniencia; si falla, la
+      // sala real sigue funcionando (el chequeo de cupo en onConnect es
+      // la fuente de verdad) — ver AGENTS.md §8.1.
+    }
   }
 }

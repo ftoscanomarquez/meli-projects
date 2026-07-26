@@ -60,8 +60,15 @@ export async function POST(request: Request) {
     });
   }
 
+  // Campos resumen en `players` (ver AGENTS.md §7) — permiten identificar a
+  // los jugadores más activos (ej. para una campaña futura) sin escanear
+  // `game_sessions` cada vez. `lastActiveAt` se corta aparte de `lastLoginAt`
+  // (lib/auth.ts) porque login ≠ jugar de verdad una partida.
   const playersCollection = db.collection("players");
-  await playersCollection.updateOne({ _id: playerId }, { $inc: { stars: starsToCredit } });
+  await playersCollection.updateOne(
+    { _id: playerId },
+    { $inc: { stars: starsToCredit, gamesPlayedCount: 1 }, $set: { lastActiveAt: now } },
+  );
   const updatedPlayer = await playersCollection.findOne({ _id: playerId });
   const totalStars = updatedPlayer?.stars ?? starsToCredit;
 

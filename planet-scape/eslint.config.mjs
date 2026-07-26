@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Bundles temporales de `wrangler dev` (ver docs/PRE-PROD.md Fase 5) —
+    // código generado/minificado, no fuente del proyecto.
+    ".wrangler/**",
   ]),
 ]);
 

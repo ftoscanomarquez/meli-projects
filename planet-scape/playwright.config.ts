@@ -1,8 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 
-// E2E (Fase 9) — ver AGENTS.md §11. Requiere `npm run dev` y `npx partykit dev`
-// corriendo en paralelo (ver QUICK-START.md); no los levanta automáticamente
-// porque ambos dependen de Mongo/Mailpit ya arriba, fuera del control de
+// E2E (Fase 9) — ver AGENTS.md §11. Requiere `npm run dev` y `npx wrangler
+// dev --port 1999` corriendo en paralelo (ver QUICK-START.md, migrado de
+// `partykit dev` el 2026-07-25); no los levanta automáticamente porque
+// ambos dependen de Mongo/Mailpit ya arriba, fuera del control de
 // Playwright. `npm run test:e2e` asume ese entorno ya está de pie.
 export default defineConfig({
   testDir: "./tests/e2e",

@@ -13,9 +13,10 @@ import { logger } from "@/lib/logger";
  * administrador".
  *
  * Quien llama esta ruta NO es un navegador con sesión de Auth.js — es el
- * propio servidor de PartyKit (Cloudflare Durable Objects/`partykit dev`),
- * un runtime completamente aparte que no comparte cookies con Next.js. Se
- * autentica con un secreto compartido por variable de entorno
+ * propio servidor multijugador (Cloudflare Durable Objects, corre vía
+ * `wrangler dev` en desarrollo — ver party/worker.ts, migrado de PartyKit
+ * el 2026-07-25), un runtime completamente aparte que no comparte cookies
+ * con Next.js. Se autentica con un secreto compartido por variable de entorno
  * (`PARTYKIT_SHARED_SECRET`, ya declarado desde la Fase 5 pero sin uso hasta
  * ahora) en vez de una sesión — mismo nivel de confianza que cualquier
  * webhook interno servidor-a-servidor de este proyecto.

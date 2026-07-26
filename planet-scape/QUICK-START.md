@@ -132,28 +132,36 @@ docker compose down
 ## Semillas de Base de Datos
 
 ```bash
-npm run seed:schema   # crea colecciones e índices
-npm run seed:config   # inserta game_config inicial + 100 space_facts
-npm run seed:data     # datos mock (jugadores, sesiones, leaderboard)
-npm run seed          # ejecuta las tres en orden
-npm run seed:admin -- --email=tu-email@ejemplo.com   # promueve un jugador existente a role=admin
+npm run seed:schema   # crea colecciones e índices (estructura, nunca datos)
+npm run seed:config   # inserta game_config inicial + 100 space_facts (balance del juego)
+npm run seed:admins   # crea/asegura las 2 cuentas admin iniciales (Francisco/Melissa), sin requerir login previo
+npm run seed          # ejecuta las tres en orden (schema → config → admins)
+npm run seed:admin -- --email=tu-email@ejemplo.com   # promueve CUALQUIER OTRO jugador ya existente a role=admin
 ```
+
+> **2026-07-25**: `seed:data`/`seed:abilities`/`seed:planets` fueron removidos del `package.json` — referenciaban scripts que nunca se implementaron (pertenecían al catálogo dinámico de planetas/habilidades, sigue fuera de alcance, ver `AGENTS.md` §15). `npm run seed` ahora solo encadena lo que existe de verdad. Ver detalle completo en `docs/PRE-PROD.md` Fase 1.
 
 ## Desarrollo
 
 ```bash
 npm run dev            # Next.js dev server
-npx partykit dev       # ✅ servidor PartyKit en local (multijugador) — correr ambos en paralelo (2 terminales)
+npm run party:dev       # ✅ servidor multijugador en local (wrangler dev --port 1999 --ip 0.0.0.0) — correr ambos en paralelo (2 terminales)
 ```
 
-El lobby (`/lobby?planet=mercury`) necesita `partykit dev` corriendo en `localhost:1999` (`NEXT_PUBLIC_PARTYKIT_HOST`, ver `.env.local`). Sin él, la conexión de sala falla — el modo solo (`/play?planet=mercury`) no lo necesita. `partykit.json` define dos parties (`main` y `directory`, ver AGENTS.md §8.1) — ambos corren dentro del mismo proceso de `partykit dev`, no hace falta nada extra para el directorio de salas abiertas.
+El flag `--ip 0.0.0.0` ya viene incluido en el script (ver troubleshooting más abajo, 2026-07-25) — necesario para que el celular en la misma red LAN pueda conectarse; sin él, `wrangler dev` solo escucha en `127.0.0.1` por defecto.
 
-**Chat en vivo + moderación (ver AGENTS.md §6.5/§6.6)**: `party/gameRoom.ts` persiste el histórico de chat llamando de vuelta a la app de Next.js (`POST /api/chat/log`), autenticado con un secreto compartido. El runtime de `partykit dev` **no** lee `.env.local` — necesita su propio `party/.env` (no versionado, mismo valor que `PARTYKIT_SHARED_SECRET`/`APP_ORIGIN` en `.env.local`):
-```env
-PARTYKIT_SHARED_SECRET=<mismo valor que .env.local>
-APP_ORIGIN=http://localhost:3000
+> **2026-07-25 — migración de PartyKit a Wrangler/`partyserver`** (ver `docs/PRE-PROD.md` Fase 5 y `RETROSPECTIVA.md` para el análisis completo): el CLI de la plataforma gestionada `partykit` (paquete npm `partykit`, comandos `npx partykit dev`/`login`/`deploy`) quedó **descontinuado** — Cloudflare compró PartyKit en 2024 y el CLI viejo no soporta el requisito nuevo de Cloudflare de migraciones `new_sqlite_classes` para Durable Objects en el plan gratuito. El proyecto ahora corre directo sobre **Wrangler** (CLI oficial de Cloudflare) + el paquete `partyserver` (mismo equipo, misma forma de API que ya usaba `party/gameRoom.ts`/`party/directory.ts` — casi sin cambios de lógica, solo de "cómo se instancia y enruta el objeto"). `partykit.json` fue reemplazado por `wrangler.jsonc`; hay un `party/worker.ts` nuevo como punto de entrada (usa `routePartykitRequest` de `partyserver`, que entiende exactamente la misma forma de URL que el cliente ya usaba — el cliente, `lib/multiplayer/useRoomConnection.ts`/`partykitHost.ts`, **no cambió**).
+
+El lobby (`/lobby?planet=mercury`) necesita `wrangler dev` corriendo en `localhost:1999` (`NEXT_PUBLIC_PARTYKIT_HOST`, ver `.env.local` — el nombre de la variable no cambió, sigue siendo válido conceptualmente). Sin él, la conexión de sala falla — el modo solo (`/play?planet=mercury`) no lo necesita. `wrangler.jsonc` define dos Durable Objects (`MAIN` → `GameRoom`, `DIRECTORY` → `Directory`, ver AGENTS.md §8.1) — ambos corren dentro del mismo proceso de `wrangler dev`, no hace falta nada extra para el directorio de salas abiertas.
+
+**TypeScript separado para `party/`**: el código del Worker corre en el runtime de Cloudflare (Durable Objects), no en Node.js/Next.js — usa sus propios tipos (`@cloudflare/workers-types`), que **no deben mezclarse** con el `tsconfig.json` de la app (rompe el tipado de `Response.json()` en toda la app si se hace global — ver `RETROSPECTIVA.md`). Por eso `party/` tiene su propio `party/tsconfig.json`, excluido del `tsconfig.json` raíz, con su propio script:
+
+```bash
+npm run typecheck        # app Next.js (tsconfig.json raíz, excluye party/)
+npm run typecheck:party  # solo party/ (party/tsconfig.json)
 ```
-Sin ese archivo, el chat en vivo sigue funcionando entre jugadores (el reenvío ocurre en el servidor de la sala, no depende de la app de Next.js) pero **no queda ningún histórico guardado** para el panel de moderación del admin.
+
+**Chat en vivo + moderación (ver AGENTS.md §6.5/§6.6)**: `party/gameRoom.ts` persiste el histórico de chat llamando de vuelta a la app de Next.js (`POST /api/chat/log`), autenticado con un secreto compartido. A diferencia del `partykit dev` original, **`wrangler dev` sí lee `.env.local` automáticamente** — ya no hace falta un `party/.env` aparte; basta con que `PARTYKIT_SHARED_SECRET`/`APP_ORIGIN` estén en el `.env.local` de siempre. (Nota de higiene: esto también significa que TODAS las variables de `.env.local` — Mongo, Stripe, Resend — quedan visibles como bindings del Worker en el log de arranque de `wrangler dev`, aunque el Worker solo use un par de ellas; es solo ruido de desarrollo local, no un problema de producción, donde los secrets se configuran explícitamente por Worker.)
 
 **Recuperación de cuenta por WhatsApp (ver AGENTS.md §6.7)**: `WHATSAPP_API_TOKEN`/`WHATSAPP_PHONE_NUMBER_ID` (WhatsApp Cloud API de Meta) son opcionales en desarrollo — sin ellos, `lib/whatsapp.ts` solo registra en el log que se habría enviado el mensaje (mismo espíritu que Mailpit para el Magic Link, ver AGENTS.md §6.1). Obligatorio darlos de alta antes de producción.
 
@@ -161,12 +169,19 @@ Sin ese archivo, el chat en vivo sigue funcionando entre jugadores (el reenvío 
 
 **Probar desde un celular en la misma red** — si el dev server se abre por IP (`http://192.168.x.x:3000`) en vez de `localhost`, agregar esa IP a `allowedDevOrigins` en `next.config.ts` (Next.js no acepta CIDR, solo hosts exactos o comodines de subdominio) para que el HMR no falle.
 
-**Troubleshooting (Windows) — "sala vacía" / "0 participantes" / "0/4 jugadores" al crear una sala nueva**: si `partykit dev` arranca en un puerto distinto a `1999` (ej. `1407`), o si tras editar `party/*.ts` con el dev server corriendo el party `directory` empieza a responder `404 Party directory not found` aunque `main` siga funcionando, es casi siempre un proceso `workerd.exe` huérfano de una sesión anterior que sigue ocupando el puerto — ver `RETROSPECTIVA.md`. Síntoma típico reportado por el usuario (2026-07-22 y recurrente): al crear una sala nueva (aunque nadie más se haya unido todavía) aparece un error como si la sala estuviera vacía/llena/rota. **No es un bug de código del proyecto** — es una limitación conocida de la herramienta `partykit dev` en Windows. Solución: cerrar el proceso huérfano y reiniciar `partykit dev` limpio (esto reinicia el estado en memoria de la sala; no requiere tocar Mongo ni ningún dato del jugador).
+**`wrangler dev` no escucha en la red local por defecto** (2026-07-25, confirmado real: el celular veía "sin salas" aunque la laptop ya había creado una) — a diferencia de `npm run dev` (Next.js, que sí escucha en todas las interfaces por defecto), `wrangler dev` por defecto solo escucha en `127.0.0.1` (loopback, inaccesible desde otro dispositivo). `npm run party:dev` ya incluye `--ip 0.0.0.0` para evitar este problema — si se corre `wrangler dev` directo sin el script de `package.json`, agregar el flag a mano.
+
+Confirmar con `netstat -an | grep 1999` — debe decir `0.0.0.0:1999 LISTENING`, no `127.0.0.1:1999`. **Si ya estabas conectado desde el celular antes de agregar `--ip 0.0.0.0`** (o antes de cualquier reinicio de `wrangler dev`/edición de `party/*.ts`), esa pestaña tiene una conexión WebSocket vieja contra el servidor anterior que no se reconecta sola — hay que **recargar la página** en ese dispositivo para que abra una conexión nueva contra el servidor actual.
+
+**Troubleshooting (Windows) — "sala vacía" / "0 participantes" / conexión que nunca abre, o `wrangler dev` que no responde a nada**: `workerd.exe` (el runtime que simula Cloudflare Workers localmente, usado tanto por el `partykit dev` original como por `wrangler dev` ahora) tiende a dejar **procesos huérfanos** en Windows cuando el proceso padre de la terminal se mata sin que el hijo reciba la señal — confirmado de nuevo el 2026-07-25 durante la migración a Wrangler: `wrangler dev --port 1999` decía "Ready" y el puerto aparecía `LISTENING` en `netstat`, pero ninguna petición (HTTP ni WebSocket) obtenía respuesta, ni siquiera desde PowerShell nativo — la causa real eran **5 instancias distintas de `workerd.exe` apiladas**, todas peleando por el mismo puerto 1999, de intentos anteriores que nunca se cerraron limpio. Síntoma típico: al crear una sala nueva (aunque nadie más se haya unido todavía) aparece como vacía/llena/rota, o directamente no conecta. **No es un bug de código del proyecto.** Solución — matar TODOS los procesos `workerd.exe` (no solo el más reciente) antes de reintentar:
+
 ```powershell
-netstat -ano | findstr :1999          # confirma qué PID tiene el puerto
-tasklist /FI "PID eq <PID>"           # debería mostrar workerd.exe
-taskkill /PID <PID> /F                # y volver a correr `npx partykit dev`
+Get-Process -Name workerd -ErrorAction SilentlyContinue | Stop-Process -Force
+Get-NetTCPConnection -LocalPort 1999 -ErrorAction SilentlyContinue   # debe salir vacío
+# y volver a correr `npx wrangler dev --port 1999` en una terminal limpia
 ```
+
+Esto reinicia el estado en memoria de la sala; no requiere tocar Mongo ni ningún dato del jugador. Si vuelve a pasar, `Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like "*wrangler*" }` lista todo el árbol de procesos (`bash → node → cmd → wrangler → workerd`) para diagnosticar cuál quedó colgado.
 
 ## Stripe (Fase 7) ✅ implementado y probado con un pago real de principio a fin
 
@@ -239,17 +254,21 @@ npm run test:load        # k6 — 100 conexiones WebSocket concurrentes / 15 min
 npm run build            # SOLO al cerrar una fase completa (regla AGENTS.md §20.9)
 npm run start             # servidor de producción local
 
-npx partykit login         # una sola vez — cuenta gratuita de PartyKit vía GitHub
-npx partykit deploy       # despliega el servidor multijugador (independiente de Vercel)
+npx wrangler deploy --domain game.planet-scape.minegocito.app   # despliega el servidor multijugador (independiente de Vercel)
 vercel --prod              # despliega la app Next.js
 ```
 
-**`npx partykit deploy` — aclaración importante** (2026-07-23, duda real del usuario: "nunca me dijiste que necesitaba cloudflare para eso... no tengo un vps?"): esto **no** requiere una cuenta propia de Cloudflare ni un VPS. PartyKit es un servicio ya hospedado (igual que Vercel/Stripe/Atlas) — por debajo corre sobre la infraestructura de Cloudflare, pero es la cuenta de Cloudflare de PartyKit, no la del proyecto. Solo hace falta `npx partykit login` (gratis, vía GitHub) antes del primer `deploy`; el comando devuelve automáticamente una URL HTTPS lista (tipo `planet-scape.<usuario>.partykit.dev`, sin configurar DNS ni certificados) — esa es la que va en `NEXT_PUBLIC_PARTYKIT_HOST` en Vercel. Mapear un dominio propio (ej. si ya tienes uno en Cloudflare) a esa URL es posible desde el dashboard de PartyKit, pero es opcional/cosmético — ver detalle completo en [`DEPLOYMENT.md` §3.2](./DEPLOYMENT.md#32-servidor-multijugador).
+**⚠️ Corrección importante (2026-07-25) sobre lo que decía esta sección antes**: la aclaración original de que `partykit deploy` "no requiere cuenta propia de Cloudflare" **dejó de ser cierta** en cuanto se necesitó un dominio propio — ver el análisis completo en `RETROSPECTIVA.md` y el plan en `docs/PRE-PROD.md` Fase 5. Resumen real:
+
+- **Con el subdominio automático de la plataforma gestionada** (`*.partykit.dev`, lo que hacía el `partykit deploy` original) sí era cierto que no requería cuenta propia de Cloudflare — pero esa plataforma quedó **descontinuada/saturada** (límite de 10,000 dominios en su zona compartida, y el CLI viejo no soporta el requisito nuevo de Cloudflare de migraciones `new_sqlite_classes`).
+- **Con `wrangler deploy --domain <tu-dominio>`** (la ruta que el proyecto usa ahora) **sí se requiere una cuenta propia de Cloudflare** con un dominio ya agregado ahí, más un **API Token** con permisos específicos (`Account: Workers Scripts (Edit)`, `Account: Workers KV Storage (Edit)`, `Zone: DNS (Edit)`, `Zone: Workers Routes (Edit)`, acotado a la zona/cuenta específica) y el **Account ID** — ambos van como `CLOUDFLARE_ACCOUNT_ID`/`CLOUDFLARE_API_TOKEN` en el entorno donde se corra `wrangler deploy` (nunca versionados).
+- No hace falta un VPS en ningún caso — Cloudflare sigue gestionando el hosting/autoescalado del Worker igual que antes, solo cambia quién es el "dueño" del dominio (antes PartyKit, ahora tú).
 
 ---
 
 ## Notas
 
-- Comandos ya implementados en `package.json`: `dev`, `build`, `start`, `lint`, `typecheck`, `seed:*`. `npx partykit dev`/`deploy` funcionan directo desde el paquete `partykit` instalado (no necesitan script propio en `package.json`). Los de test (`test`, `test:e2e`, `test:api`, `test:load`) se agregan en su fase correspondiente (9).
+- Comandos ya implementados en `package.json`: `dev`, `build`, `start`, `lint`, `typecheck`, `typecheck:party`, `seed:*`, `party:dev` (`wrangler dev`), `party:deploy` (`wrangler deploy`). Los de test (`test`, `test:e2e`, `test:api`, `test:load`) se agregan en su fase correspondiente (9).
+- El paquete `partykit` (CLI de la plataforma gestionada) fue **desinstalado** (2026-07-25) — reemplazado por `partyserver` + `wrangler`, ver más arriba. `partykit.json` fue borrado y reemplazado por `wrangler.jsonc`.
 - Los contenedores de `docker-compose.yml` pueden ya estar corriendo de forma compartida con otro proyecto local en esta máquina (mismos puertos/credenciales) — ver incidente registrado en [`RETROSPECTIVA.md`](./RETROSPECTIVA.md). `docker compose up -d` fallará con "port is already allocated" si es el caso; no es un error bloqueante, solo confirma que el Mongo/Mailpit compartido ya está disponible.
 - Cualquier cambio a esta estructura o a estos comandos debe reflejarse aquí **y** en `AGENTS.md` (registrar en el Changelog, §16), según la regla de sincronización.

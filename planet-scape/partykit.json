@@ -1,8 +1,0 @@
-{
-  "name": "planet-scape",
-  "main": "party/gameRoom.ts",
-  "parties": {
-    "directory": "party/directory.ts"
-  },
-  "compatibilityDate": "2026-07-22"
-}

@@ -52,13 +52,25 @@ describe("AdjustStarsRequestSchema (admin star adjustment)", () => {
 });
 
 describe("PlayerSearchResultSchema", () => {
+  const wellFormedRow = {
+    id: "abc123",
+    email: "a@b.com",
+    displayName: "A",
+    firstName: "Ana",
+    lastName: "Lopez",
+    stars: 10,
+    role: "player",
+    birthDate: "1990-01-01",
+    phone: null,
+    unlockedPlanets: [],
+  };
+
   it("accepts a well-formed player row", () => {
-    const row = { id: "abc123", email: "a@b.com", displayName: "A", stars: 10, role: "player" };
-    expect(PlayerSearchResultSchema.safeParse(row).success).toBe(true);
+    expect(PlayerSearchResultSchema.safeParse(wellFormedRow).success).toBe(true);
   });
 
   it("rejects an unknown role", () => {
-    const row = { id: "abc123", email: "a@b.com", displayName: "A", stars: 10, role: "superadmin" };
+    const row = { ...wellFormedRow, role: "superadmin" };
     expect(PlayerSearchResultSchema.safeParse(row).success).toBe(false);
   });
 });
@@ -117,9 +129,14 @@ describe("CompleteSessionRequestSchema", () => {
     expect(CompleteSessionRequestSchema.safeParse(payload).success).toBe(true);
   });
 
-  it("rejects an unknown planet key (only the 4 starter planets are selectable)", () => {
-    const payload = { planet: "jupiter", level: 1, starsCollected: 0 };
+  it("rejects an unknown planet key (7 playable planets: 4 starters + Jupiter/Saturn/Neptune)", () => {
+    const payload = { planet: "pluto", level: 1, starsCollected: 0 };
     expect(CompleteSessionRequestSchema.safeParse(payload).success).toBe(false);
+  });
+
+  it("accepts a premium planet key (Jupiter, unlockable with stars — ver AGENTS.md §5.2)", () => {
+    const payload = { planet: "jupiter", level: 1, starsCollected: 0 };
+    expect(CompleteSessionRequestSchema.safeParse(payload).success).toBe(true);
   });
 
   it("rejects negative level/starsCollected", () => {

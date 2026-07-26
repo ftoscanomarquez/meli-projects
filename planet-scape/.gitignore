@@ -16,6 +16,7 @@
 /test-results/
 /tests/postman/report.html
 /.partykit/
+/.wrangler/
 
 # next.js
 /.next/

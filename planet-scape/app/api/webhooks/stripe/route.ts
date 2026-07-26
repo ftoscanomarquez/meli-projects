@@ -61,13 +61,30 @@ export async function POST(request: Request) {
 
   const { donation } = await getGameConfig();
   const playerObjectId = new ObjectId(playerId);
+  const now = new Date();
   await db.collection("star_transactions").insertOne({
     playerId: playerObjectId,
     amount: donation.rewardStars,
     reason: "donation_reward",
-    createdAt: new Date(),
+    createdAt: now,
   });
-  await db.collection("players").updateOne({ _id: playerObjectId }, { $inc: { stars: donation.rewardStars } });
+  // Campos resumen en `players` (ver AGENTS.md §7) — permiten identificar
+  // donantes y ordenarlos/filtrarlos (ej. para una campaña futura con
+  // beneficios a quien ya donó) sin sumar toda la colección `donations` cada
+  // vez. `amount_total` de Stripe es la fuente de verdad del monto real
+  // cobrado (en centavos, misma unidad que `amountCents` en `donations`),
+  // no el `amountCents` que el cliente pidió al crear el checkout.
+  await db.collection("players").updateOne(
+    { _id: playerObjectId },
+    {
+      $inc: {
+        stars: donation.rewardStars,
+        totalDonatedCents: checkoutSession.amount_total ?? 0,
+        donationCount: 1,
+      },
+      $set: { lastDonationAt: now },
+    },
+  );
 
   logger.info(
     { playerId, sessionId: checkoutSession.id, amountTotal: checkoutSession.amount_total },

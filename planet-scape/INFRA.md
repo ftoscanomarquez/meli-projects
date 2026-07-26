@@ -13,7 +13,19 @@ Chrome 120+, Firefox 118+, Edge 120+. WebGL 2 requerido (para PixiJS) — se deb
 
 ### 1.2 Producción
 
-La app Next.js se despliega en **Vercel** (serverless, autoescalable) y el servidor multijugador en **PartyKit** (edge de Cloudflare, autoescalable) — **no hay servidor dedicado que dimensionar**: ambos proveedores gestionan el escalado horizontal automáticamente. La base de datos recomendada para producción es MongoDB Atlas (M0/M2 según tráfico), también gestionada.
+La app Next.js se despliega en **Vercel** (serverless, autoescalable) y el servidor multijugador directamente en **Cloudflare Workers** (Durable Objects vía `partyserver`/Wrangler — migrado de la plataforma gestionada PartyKit el 2026-07-25, ver `RETROSPECTIVA.md` y `docs/PRE-PROD.md` Fase 5) — **no hay servidor dedicado que dimensionar**: ambos proveedores gestionan el escalado horizontal automáticamente. La base de datos recomendada para producción es MongoDB Atlas (cluster M0, ya creado — ver `docs/PRE-PROD.md` Fase 2).
+
+#### 1.2.1 Subdominios de producción (dominio propio `minegocito.app`, Cloudflare)
+
+Todo el proyecto vive bajo el mismo dominio raíz del usuario, agrupado por subdominio según a qué servicio apunta cada uno:
+
+| Subdominio | Apunta a | Para qué | Estado |
+|---|---|---|---|
+| `planet-scape.minegocito.app` | Vercel (registro `CNAME` → `cname.vercel-dns.com`) | La app completa: landing, auth, motor de juego, panel admin, todas las rutas `/api/*` | ⏳ pendiente — ver `docs/PRE-PROD.md` Fase 7 |
+| `game.planet-scape.minegocito.app` | Cloudflare Workers (`wrangler deploy --domain`) | Servidor multijugador — WebSocket de salas (`GameRoom`) y directorio de salas abiertas (`Directory`) | ✅ desplegado y validado (2026-07-26) |
+| `send.planet-scape.minegocito.app` | Resend (registros MX/TXT vía "Auto configure") | Envío de correo transaccional (Magic Link) | ✅ verificado (2026-07-25) |
+
+Para los dos subdominios ya activos (`game.*`/`send.*`), el registro DNS correspondiente en Cloudflare se creó **automáticamente** por la herramienta respectiva (Wrangler y el "Auto configure" de Resend) — no requirió edición manual del panel de DNS. El de Vercel (`planet-scape.*`, sin el subdominio `game`) sí se agrega manualmente desde el dashboard de Vercel cuando se ejecute la Fase 7, siguiendo el mismo patrón: Vercel indica el valor del `CNAME`, se agrega en Cloudflare con **Proxy status: DNS only** (mismo criterio que los otros dos, para no interferir con el TLS que cada plataforma gestiona por su cuenta).
 
 ### 1.3 Entorno de Desarrollo Local (equipo del desarrollador)
 

@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Solo validación (lint/typecheck/tests/build) — ver docs/PRE-PROD.md Fase 6.
+# NO despliega nada: Vercel hace su propio build+deploy automático al
+# conectar el repo (Fase 7); el servidor multijugador se despliega aparte
+# con `wrangler deploy` (Fase 5), fuera de este workflow.
+env:
+  # Solo build-time — ninguna conexión real ocurre durante `next build`
+  # (confirmado real: lib/db.ts/lib/stripe.ts solo exigen que la variable
+  # EXISTA para no tronar al importarse; getDb()/stripe.checkout.* nunca se
+  # llaman en build-time, solo en runtime de una request real).
+  MONGODB_URI: mongodb://dummy:27017
+  MONGODB_DB: planet_scape
+  AUTH_SECRET: dummy-secret-only-for-ci-build
+  STRIPE_SECRET_KEY: sk_test_dummy_only_for_ci_build
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run typecheck:party
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run test
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [lint, typecheck, test]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build

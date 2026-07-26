@@ -1,10 +1,11 @@
 import { test, expect } from "@playwright/test";
 import { loginViaMagicLink, uniqueTestEmail } from "./helpers/auth";
 
-// Fase 5 / §8.1 — ver AGENTS.md. Requiere `npx partykit dev` corriendo
-// (ver QUICK-START.md) además de `npm run dev`; si no está arriba, la
-// conexión a la sala falla y este spec se cae con timeout al esperar el
-// roster, no con un error confuso de red.
+// Fase 5 / §8.1 — ver AGENTS.md. Requiere `npx wrangler dev --port 1999`
+// corriendo (ver QUICK-START.md, migrado de `partykit dev` el 2026-07-25)
+// además de `npm run dev`; si no está arriba, la conexión a la sala falla y
+// este spec se cae con timeout al esperar el roster, no con un error
+// confuso de red.
 test("two real browsers: open-rooms directory, join, and the 'creating session' hand-off into the real engine", async ({
   browser,
 }) => {
