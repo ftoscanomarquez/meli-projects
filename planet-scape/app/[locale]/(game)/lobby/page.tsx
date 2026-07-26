@@ -25,7 +25,7 @@ export default async function LobbyPage({
   }
 
   const session = await auth();
-  if (!canPlayPlanet(planet, session?.user?.unlockedPlanets ?? [])) {
+  if (!canPlayPlanet(planet, !!session?.user, session?.user?.unlockedPlanets ?? [])) {
     notFound();
   }
 

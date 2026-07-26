@@ -312,6 +312,15 @@ export function PlanetSelector({ playCounts = {} }: { playCounts?: Record<string
     setRotation((current) => shortestRotation(current, -(index * ANGLE_STEP)));
     if (item.premium) handlePremiumClick(item.key as PremiumPlanetKey);
     else {
+      // Registro obligatorio para jugar (2026-07-26, pedido explícito del
+      // usuario): antes los 4 planetas iniciales no requerían sesión — ahora
+      // TODOS los planetas, incluidos los gratis, exigen haber iniciado
+      // sesión primero. Mismo mecanismo ya usado para premium sin sesión
+      // (ver handlePremiumClick arriba) — mensaje inline, sin modal nuevo.
+      if (!session) {
+        setStatusMessage(t("starterNeedsLogin"));
+        return;
+      }
       setStatusMessage(null);
       setSelected(item.key);
     }

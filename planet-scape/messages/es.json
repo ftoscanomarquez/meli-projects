@@ -123,6 +123,7 @@
     "infoButtonLabel": "Sobre {planet}",
     "playAs": "Jugar como {planet}",
     "premiumNeedsLogin": "Inicia sesión primero para poder desbloquear este planeta.",
+    "starterNeedsLogin": "Inicia sesión primero para poder jugar — así guardamos tus estrellas y tu progreso.",
     "premiumInsufficientStars": "Necesitas {cost} estrellas, llevas {stars}. ¡Sigue jugando para juntar más!",
     "premiumUnlockError": "No se pudo desbloquear el planeta. Intenta de nuevo.",
     "premiumConfirm": "¿Quieres redimir {cost} estrellas para desbloquear a {planet} para siempre?",

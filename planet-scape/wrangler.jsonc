@@ -27,8 +27,10 @@
       "tag": "v1",
       "new_sqlite_classes": ["GameRoom", "Directory"]
     }
-  ],
-  "vars": {
-    "APP_ORIGIN": "http://localhost:3000"
-  }
+  ]
+  // APP_ORIGIN y PARTYKIT_SHARED_SECRET NO viven aquí — se manejan como
+  // secrets vía `wrangler secret put` (ver docs/PRE-PROD.md Fase 5/7):
+  // - En desarrollo, `wrangler dev` los toma de .env.local automáticamente.
+  // - En producción, quedan cifrados en el Worker, nunca en texto plano en
+  //   este archivo versionado.
 }

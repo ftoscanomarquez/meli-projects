@@ -123,6 +123,7 @@
     "infoButtonLabel": "About {planet}",
     "playAs": "Play as {planet}",
     "premiumNeedsLogin": "Sign in first to unlock this planet.",
+    "starterNeedsLogin": "Sign in first to play — that way we can save your stars and progress.",
     "premiumInsufficientStars": "You need {cost} stars, you have {stars}. Keep playing to earn more!",
     "premiumUnlockError": "Couldn't unlock the planet. Please try again.",
     "premiumConfirm": "Redeem {cost} stars to unlock {planet} for good?",
