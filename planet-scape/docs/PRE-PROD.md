@@ -4,7 +4,7 @@
 >
 > Aplica la misma regla de sincronización de [`AGENTS.md` §0.1](../AGENTS.md#01-regla-de-sincronizacion-de-documentacion): todo cambio real hecho durante la ejecución de este plan se refleja también en `DEPLOYMENT.md`/`INFRA.md`/`AGENTS.md` (changelog), no solo aquí.
 
-**Creado**: 2026-07-25. **Última actualización**: 2026-07-26 (fin de sesión). **Estado general**: 🔄 en curso — Fases 1-6 completadas, Fase 7 (Vercel) desplegada y funcionando con el dominio propio, quedan pendientes puntuales antes de dar la Fase 7 por cerrada del todo. Ver "Punto de retomada" abajo.
+**Creado**: 2026-07-25. **Última actualización**: 2026-07-26. **Estado general**: 🔄 en curso — Fases 1-6 completadas, Fase 7 (Vercel) desplegada y funcionando con el dominio propio, **login por correo y multijugador confirmados funcionando en producción real por el usuario**. Quedan pendientes puntuales antes de dar la Fase 7 por cerrada del todo. Ver "Punto de retomada" abajo.
 
 **Contexto del objetivo** (para no perderlo de vista en ninguna fase): proyecto familiar/educativo, sin presupuesto, usando exclusivamente herramientas con tier gratuito. No se espera alto volumen de usuarios — las decisiones de esta guía priorizan simplicidad y costo cero sobre escalabilidad.
 
@@ -12,28 +12,28 @@
 
 ## 🔖 Punto de retomada (fin de sesión 2026-07-26)
 
-**Resumen de lo que YA funciona en producción real** (`https://planet-scape.minegocito.app`):
+**Resumen de lo que YA funciona en producción real** (`https://planet-scape.minegocito.app`), **confirmado por el usuario jugando de verdad** (2026-07-26):
 
 - Landing pública, `/api/health` respondiendo con Mongo Atlas conectado.
-- MongoDB Atlas, Resend (email), Stripe live (con webhook registrado), servidor multijugador (Cloudflare Worker) — todos desplegados y validados en algún punto de hoy.
+- MongoDB Atlas, Resend (email), Stripe live (con webhook registrado), servidor multijugador (Cloudflare Worker) — todos desplegados.
+- ✅ **Login por correo funcionando de punta a punta** — el código de 6 dígitos llegó al correo real tras el fix del sufijo `_PROD` (ver incidente abajo).
+- ✅ **Multijugador confirmado funcionando** — el usuario creó una sala real con éxito.
 - CI de GitHub Actions en verde.
 - Login ahora es obligatorio para jugar cualquier planeta (incluidos los 4 gratis) — cambio de comportamiento pedido en vivo y ya desplegado.
 
-**Lo último que se estaba resolviendo cuando se cortó la sesión** (2026-07-26, tarde-noche):
+**Incidente real de la sesión anterior, ya cerrado**:
 
-1. **Bug real encontrado y CORREGIDO**: 4 variables de entorno en Vercel (`AUTH_SECRET`, `NEXT_PUBLIC_PARTYKIT_HOST`, `APP_ORIGIN`, `PARTYKIT_SHARED_SECRET`) se habían guardado con el sufijo `_PROD` de más (arrastrado sin querer del archivo local `.env.atlas.local`, donde ese sufijo se usa a propósito para distinguirlas de los valores de desarrollo dentro del mismo archivo) — el código nunca las encontraba con ese nombre. Efecto real observado: el login por correo parecía funcionar (sin error en pantalla) pero el correo **nunca se intentaba enviar** (confirmado: no aparecía ni en los logs de Resend). Ya se corrigió: se borraron las 4 variables mal nombradas y se recrearon con el nombre correcto vía `vercel env add`, y se forzó un redeploy (`vercel redeploy <última URL de producción>`) para que las tomara.
-2. **⏳ PENDIENTE DE CONFIRMAR mañana como primer paso**: el usuario iba a volver a intentar el login justo cuando se cortó la sesión — **hay que confirmar que el correo SÍ llega ahora** antes de dar este bug por cerrado del todo. Si sigue sin llegar, revisar de nuevo el dashboard de Resend (pestaña "Emails", no "Logs") para ver si esta vez sí aparece el intento.
-3. **✅ Corregido, ya desplegado**: el texto de la pantalla de "ingresa el código" mencionaba literalmente "(o en Mailpit)" — texto de desarrollo que se había quedado hardcodeado y se veía en producción real. Ya corregido en `messages/es.json`/`en.json` (clave `codeStepHint`), commit y deploy pendientes de hacer (ver checklist abajo).
-4. **⏳ PENDIENTE, pedido explícito del usuario, no implementado todavía**: subir el tiempo para poder ingresar el código de 6 dígitos (hoy son 10 minutos, `VERIFICATION_CODE_MAX_AGE_S` en `lib/auth.ts`) — el usuario lo pidió justo antes de que se detectara el bug de las variables de entorno, no se ha decidido a cuánto subirlo. **Definir el valor nuevo con el usuario antes de tocar código.**
+1. **Bug real encontrado y CORREGIDO**: 4 variables de entorno en Vercel (`AUTH_SECRET`, `NEXT_PUBLIC_PARTYKIT_HOST`, `APP_ORIGIN`, `PARTYKIT_SHARED_SECRET`) se habían guardado con el sufijo `_PROD` de más (arrastrado sin querer del archivo local `.env.atlas.local`, donde ese sufijo se usa a propósito para distinguirlas de los valores de desarrollo dentro del mismo archivo) — el código nunca las encontraba con ese nombre. Efecto real observado: el login por correo parecía funcionar (sin error en pantalla) pero el correo **nunca se intentaba enviar** (confirmado: no aparecía ni en los logs de Resend). Corregido: se borraron las 4 variables mal nombradas y se recrearon con el nombre correcto vía `vercel env add`, con un redeploy forzado — **✅ confirmado resuelto**, el correo ya llega y el multijugador funciona.
+2. **✅ Corregido y desplegado**: el texto de la pantalla de "ingresa el código" mencionaba literalmente "(o en Mailpit)" — texto de desarrollo que se había quedado hardcodeado y se veía en producción real. Corregido en `messages/es.json`/`en.json` (clave `codeStepHint`), ya en `main`.
+3. **⏳ PENDIENTE, pedido explícito del usuario, no implementado todavía**: subir el tiempo para poder ingresar el código de 6 dígitos (hoy son 10 minutos, `VERIFICATION_CODE_MAX_AGE_S` en `lib/auth.ts`) — no se ha decidido a cuánto subirlo. **Definir el valor nuevo con el usuario antes de tocar código.**
 
-**Checklist inmediato para la próxima sesión**:
+**Checklist para la próxima sesión**:
 
-- [ ] Confirmar con el usuario si el login/correo ya funciona en producción tras el fix de variables.
-- [ ] Hacer commit + push del fix de `codeStepHint` (quitar mención a Mailpit) — está corregido en el working tree pero no subido a git todavía.
 - [ ] Decidir y aplicar el nuevo tiempo de expiración del código de 6 dígitos.
-- [ ] Retomar el plan original de Fase 7 (ver sección más abajo): confirmar variables completas, decidir si se elimina o se deja vivo el dominio `planet-scape.vercel.app` (el usuario preguntó al respecto — no hay razón técnica para eliminarlo, es decisión de preferencia).
-- [ ] Fase 8 (verificación end-to-end) sigue sin arrancar formalmente.
-- [ ] Pendiente ya acordado y pausado a propósito: implementar el resize reactivo completo del motor de juego (bug real de móvil/plegables al rotar/cambiar tamaño de viewport en plena partida) — el usuario confirmó que se haga DESPUÉS de cerrar Stripe/salas/producción. Diagnóstico completo ya hecho (ver sección "Bugs reales encontrados hoy" abajo) — falta solo implementar.
+- [ ] Prueba real de una donación de punta a punta contra el webhook de Stripe ya registrado (pendiente, no bloqueante).
+- [ ] Decidir si se elimina o se deja vivo el dominio `planet-scape.vercel.app` (el usuario preguntó al respecto — no hay razón técnica para eliminarlo, es decisión de preferencia).
+- [ ] Fase 8 (verificación end-to-end formal) sigue sin arrancar.
+- [ ] Pendiente ya acordado y pausado a propósito: implementar el resize reactivo completo del motor de juego (bug real de móvil/plegables al rotar/cambiar tamaño de viewport en plena partida) — el usuario confirmó que se haga DESPUÉS de cerrar Stripe/salas/producción, que ya están cerrados. Diagnóstico completo ya hecho (ver sección "Bugs reales encontrados hoy" abajo) — falta solo implementar.
 
 ---
 
