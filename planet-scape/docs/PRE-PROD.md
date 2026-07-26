@@ -4,13 +4,13 @@
 >
 > Aplica la misma regla de sincronización de [`AGENTS.md` §0.1](../AGENTS.md#01-regla-de-sincronizacion-de-documentacion): todo cambio real hecho durante la ejecución de este plan se refleja también en `DEPLOYMENT.md`/`INFRA.md`/`AGENTS.md` (changelog), no solo aquí.
 
-**Creado**: 2026-07-25. **Última actualización**: 2026-07-26. **Estado general**: 🔄 en curso — Fases 1-6 completadas, Fase 7 (Vercel) desplegada y funcionando con el dominio propio, **login por correo y multijugador confirmados funcionando en producción real por el usuario**. Quedan pendientes puntuales antes de dar la Fase 7 por cerrada del todo. Ver "Punto de retomada" abajo.
+**Creado**: 2026-07-25. **Última actualización**: 2026-07-26. **Estado general**: 🔄 en curso — Fases 1-6 completadas, Fase 7 (Vercel) desplegada y funcionando con el dominio propio, **login por correo y multijugador confirmados funcionando en producción real por el usuario**. Trabajo autónomo nocturno adicional (resize reactivo + rango de asteroides configurable) completado y validado, tag `v1.1.0-playable` publicado. Queda **Stripe/donaciones sin validar de punta a punta en producción** — explícitamente pospuesto por el usuario para la siguiente sesión. Ver "Punto de retomada" abajo.
 
 **Contexto del objetivo** (para no perderlo de vista en ninguna fase): proyecto familiar/educativo, sin presupuesto, usando exclusivamente herramientas con tier gratuito. No se espera alto volumen de usuarios — las decisiones de esta guía priorizan simplicidad y costo cero sobre escalabilidad.
 
 ---
 
-## 🔖 Punto de retomada (fin de sesión 2026-07-26)
+## 🔖 Punto de retomada (fin de sesión de trabajo autónomo nocturno, 2026-07-26)
 
 **Resumen de lo que YA funciona en producción real** (`https://planet-scape.minegocito.app`), **confirmado por el usuario jugando de verdad** (2026-07-26):
 
@@ -21,19 +21,25 @@
 - CI de GitHub Actions en verde.
 - Login ahora es obligatorio para jugar cualquier planeta (incluidos los 4 gratis) — cambio de comportamiento pedido en vivo y ya desplegado.
 
+**Trabajo autónomo nocturno completado esta sesión** (pedido explícito del usuario antes de desconectarse, con instrucción expresa de NO tocar Stripe): "quiero que te quedes trabajando en lo de redimensionamiento en mobile... pon configurable con el admin el que se pueda aumentar el rango de asteroides... quedate trabajando en esto pruebalo y llega hasta el final y validalo, Crea un Tag en gitHub... ya mañana vemos lo de validar lo de stripe".
+
+1. ✅ **Resize reactivo del motor** — `resize(width, height)` agregado a `Player`/`Sun`(reutilizado por `redSun`)/`BlackHole`(reutilizado por `novaBlackHole`)/`ZodiacLayer`; `GameEngine.ts#handleResize` recalcula `entityScale`/`paceScale`/`playerPaceMultiplier` y reescala Sun/BlackHole/Quasar en caliente. Validado con Playwright real (login → partida → 3 cambios de viewport simulando rotación y apertura de plegable → cero errores, capturas confirmando encuadre correcto en cada tamaño). Ver detalle completo en `RETROSPECTIVA.md` (2026-07-26).
+2. ✅ **Rango de asteroides configurable** — `game_config.asteroids` (frecuencia, velocidad mín/bono máx) nuevo, editable desde `/admin` sin redeploy, migración corrida contra Mongo local y Atlas de producción, validado con Playwright real en `/admin`.
+3. ✅ **CI validado en verde** para ambos cambios (`gh run list` confirmado `success` tras el push).
+4. ✅ **Tag `v1.1.0-playable`** creado y publicado sobre el commit con ambos fixes (continúa `v1.0.0-playable`, que quedó en el commit anterior a este trabajo).
+
 **Incidente real de la sesión anterior, ya cerrado**:
 
 1. **Bug real encontrado y CORREGIDO**: 4 variables de entorno en Vercel (`AUTH_SECRET`, `NEXT_PUBLIC_PARTYKIT_HOST`, `APP_ORIGIN`, `PARTYKIT_SHARED_SECRET`) se habían guardado con el sufijo `_PROD` de más (arrastrado sin querer del archivo local `.env.atlas.local`, donde ese sufijo se usa a propósito para distinguirlas de los valores de desarrollo dentro del mismo archivo) — el código nunca las encontraba con ese nombre. Efecto real observado: el login por correo parecía funcionar (sin error en pantalla) pero el correo **nunca se intentaba enviar** (confirmado: no aparecía ni en los logs de Resend). Corregido: se borraron las 4 variables mal nombradas y se recrearon con el nombre correcto vía `vercel env add`, con un redeploy forzado — **✅ confirmado resuelto**, el correo ya llega y el multijugador funciona.
 2. **✅ Corregido y desplegado**: el texto de la pantalla de "ingresa el código" mencionaba literalmente "(o en Mailpit)" — texto de desarrollo que se había quedado hardcodeado y se veía en producción real. Corregido en `messages/es.json`/`en.json` (clave `codeStepHint`), ya en `main`.
 3. **⏳ PENDIENTE, pedido explícito del usuario, no implementado todavía**: subir el tiempo para poder ingresar el código de 6 dígitos (hoy son 10 minutos, `VERIFICATION_CODE_MAX_AGE_S` en `lib/auth.ts`) — no se ha decidido a cuánto subirlo. **Definir el valor nuevo con el usuario antes de tocar código.**
 
-**Checklist para la próxima sesión**:
+**Checklist para la próxima sesión** (prioridad indicada explícitamente por el usuario: Stripe primero — "ya mañana vemos lo de validar lo de stripe que es lo importante"):
 
+- [ ] **Prioridad 1 — Prueba real de una donación de punta a punta** contra el webhook de Stripe ya registrado en producción (checkout live real, confirmar `donations.status=completed`, estrellas acreditadas, banner de agradecimiento).
 - [ ] Decidir y aplicar el nuevo tiempo de expiración del código de 6 dígitos.
-- [ ] Prueba real de una donación de punta a punta contra el webhook de Stripe ya registrado (pendiente, no bloqueante).
 - [ ] Decidir si se elimina o se deja vivo el dominio `planet-scape.vercel.app` (el usuario preguntó al respecto — no hay razón técnica para eliminarlo, es decisión de preferencia).
 - [ ] Fase 8 (verificación end-to-end formal) sigue sin arrancar.
-- [ ] Pendiente ya acordado y pausado a propósito: implementar el resize reactivo completo del motor de juego (bug real de móvil/plegables al rotar/cambiar tamaño de viewport en plena partida) — el usuario confirmó que se haga DESPUÉS de cerrar Stripe/salas/producción, que ya están cerrados. Diagnóstico completo ya hecho (ver sección "Bugs reales encontrados hoy" abajo) — falta solo implementar.
 
 ---
 
