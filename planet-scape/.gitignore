@@ -45,6 +45,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# scripts temporales de validación manual (nunca versionados)
+/.tmp-scripts/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

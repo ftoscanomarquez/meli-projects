@@ -94,6 +94,19 @@ export class Sun {
     this.scheduleHidden();
   }
 
+  /**
+   * Resize reactivo (2026-07-26) — mismo motivo que Player.resize(): el Sol
+   * solo LEE `width`/`height` al calcular su próximo punto de entrada/salida
+   * (`enterFromRandomEdge()`/lógica de "exiting"), nunca reposiciona nada de
+   * golpe aquí — el próximo ciclo natural de entrada ya usará la geometría
+   * nueva. El Sol pasa la mayor parte del tiempo oculto, así que no hace
+   * falta interrumpir su animación en curso.
+   */
+  resize(width: number, height: number) {
+    this.width = width;
+    this.height = height;
+  }
+
   private setMouth(open: boolean) {
     // Defensa adicional: si de todos modos llega una llamada tardía tras
     // destroy(), no truena — PixiJS marca `destroyed: true` en vez de

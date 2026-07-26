@@ -92,6 +92,8 @@
 | RF-GAME-31 | La fusión del Quasar debe mostrar una explosión de polvo de colores neón al completarse, y su disco activo debe mostrarse como anillos de polvo de colores parpadeantes (no trazos lisos) girando a un ritmo pausado. | ✅ | [§5.1](./AGENTS.md#51-objetos-del-entorno) |
 | RF-GAME-32 | En PC/laptop (no en móvil), la velocidad y frecuencia de aparición de los asteroides deben escalar con el ancho real de la pantalla (tope 3x), para que la sensación de ritmo sea comparable a la de un celular; este ajuste nunca debe aplicarse en multijugador. | ✅ | [§5.1](./AGENTS.md#51-objetos-del-entorno) |
 | RF-GAME-33 | En PC/laptop (no en móvil ni en multijugador), debe poder probarse la velocidad de movimiento del jugador al doble de su valor configurado, como prueba de balance. | ✅ | [§5.1](./AGENTS.md#51-objetos-del-entorno) |
+| RF-GAME-34 | Si el jugador rota el celular o abre un dispositivo plegable a mitad de partida, el mundo del juego (jugador, Sol, agujeros negros, escala de todas las entidades, constelaciones del zodiaco) debe reajustarse en caliente al nuevo tamaño de pantalla, sin reiniciar la partida ni dejar entidades fuera de encuadre o con el tamaño incorrecto. | ✅ | [§4](./AGENTS.md#4-motor-grafico-y-animacion), [§16 changelog 2026-07-26](./AGENTS.md#16-registro-de-cambios-changelog) |
+| RF-GAME-35 | La frecuencia de aparición de asteroides y su rango de velocidad (mínimo/bono máximo) deben ser editables desde el panel de administración sin redeploy, combinándose con el ajuste automático por tamaño de pantalla (`paceScale`) ya existente. | ✅ | [§9](./AGENTS.md#9-panel-de-administracion--implementado-y-probado), [§16 changelog 2026-07-26](./AGENTS.md#16-registro-de-cambios-changelog) |
 
 ### 1.5 Habilidades de los planetas (RF-AB)
 

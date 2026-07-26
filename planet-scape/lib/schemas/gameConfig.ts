@@ -158,6 +158,25 @@ export const GameConfigSchema = z.object({
   redSun: SunConfigSchema.extend({ minLevel: z.number().int().nonnegative() }),
   pulsars: z.object({ spawnFrequencyMs: z.number().int().positive() }),
   stars: z.object({ spawnFrequencyMs: z.number().int().positive() }),
+  // Rango de asteroides (2026-07-26) — pedido explícito del usuario, varias
+  // veces a lo largo del proyecto: "en modo laptop salen muy pocos
+  // asteroides al inicio". Antes `minSpeed`/el intervalo de aparición eran
+  // constantes fijas en `spawnSystem.ts`/`GameEngine.ts#updateSpawns` — se
+  // ajustaban a ciegas en cada sesión de feedback sin quedar nunca resuelto
+  // del todo. Ahora son configurables desde /admin, mismo patrón que
+  // `pulsars`/`stars` arriba. `spawnFrequencyBaseMs` es el intervalo BASE
+  // (antes de nivel/paceScale/Nova) entre asteroides — más bajo = aparecen
+  // más seguido. `minSpeed`/`maxSpeedBonus` reemplazan las constantes 110/600
+  // ya existentes (el techo real sigue siendo `minSpeed + rng()*(90 +
+  // min(maxSpeedBonus, level*14))`, ver spawnSystem.ts — el `min(level*14)`
+  // se mantiene fijo en código, solo el TECHO configurable se vuelve
+  // ajustable). `paceScale` (ver GameEngine.ts) sigue aplicándose encima,
+  // sin cambios — ambos multiplicadores se combinan, no compiten.
+  asteroids: z.object({
+    spawnFrequencyBaseMs: z.number().int().positive(),
+    minSpeed: z.number().positive(),
+    maxSpeedBonus: z.number().positive(),
+  }),
   blackHole: BlackHoleConfigSchema, // Agujero Negro clásico (nivel 0+)
   // Agujero Negro Nova (ver AGENTS.md §5.1) — mismo criterio de `minLevel`
   // que redSun arriba (sin piso mínimo). Arranca en 60 (valor de lanzamiento sin cambios).
@@ -272,6 +291,11 @@ export const DEFAULT_GAME_CONFIG: GameConfig = {
   redSun: { minFlares: 6, maxFlares: 100, spawnFrequencyMs: 3200, minLevel: 45 },
   pulsars: { spawnFrequencyMs: 5200 },
   stars: { spawnFrequencyMs: 3000 },
+  // Valores de lanzamiento — iguales a las constantes que ya estaban
+  // hardcodeadas en spawnSystem.ts/GameEngine.ts#updateSpawns antes de este
+  // cambio (700ms base, 110 minSpeed, 600 maxSpeedBonus) — el admin puede
+  // ajustarlos a partir de aquí sin cambiar el comportamiento de lanzamiento.
+  asteroids: { spawnFrequencyBaseMs: 700, minSpeed: 110, maxSpeedBonus: 600 },
   blackHole: { size: 46, attractionForce: 1, minClicksToDefeat: 3, maxClicksToDefeat: 20 },
   // Agujero Negro Nova (nivel 60+) — arranca IGUAL que el clásico, editable
   // aparte desde /admin a partir de aquí.

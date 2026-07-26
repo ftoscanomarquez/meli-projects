@@ -896,10 +896,51 @@ export class GameEngine {
     this.floatingTexts.push({ text, remainingMs: durationMs });
   }
 
+  /**
+   * Resize reactivo (2026-07-26) — bug real reportado por el usuario: al
+   * rotar el celular o abrir un dispositivo plegable a mitad de partida, el
+   * canvas se redimensionaba solo (PixiJS `resizeTo`) pero el resto del
+   * mundo (jugador, Sol, agujeros negros, fondo, escala de entidades) se
+   * quedaba congelado en la geometría de cuando se montó el motor — se veía
+   * "descuadrado": el jugador atrapado en límites viejos, entidades del
+   * tamaño incorrecto para el nuevo viewport.
+   *
+   * `entityScale`/`paceScale`/`playerPaceMultiplier` se recalculan con la
+   * MISMA fórmula que `mount()`. Sun/redSun ya escalan su `container` entero
+   * vía `.scale.set(entityScale)` (geometría fija, multiplicador simple) —
+   * basta con volver a llamar `.scale.set(newEntityScale)`. BlackHole/
+   * novaBlackHole/Quasar en cambio HORNEAN `entityScale` dentro de `size`
+   * una sola vez en `mount()` (su `Graphics` se dibuja directo en unidades
+   * de `baseRadius`, sin usar `.container.scale`) — para esos tres, en vez
+   * de reconstruirlos (perdería su fase/estado en curso), se aplica un
+   * multiplicador RELATIVO (`newEntityScale / entityScale`) sobre su
+   * `container.scale` ya existente, que arranca en 1 y se acumula.
+   */
   private handleResize = () => {
     this.width = this.app.screen.width;
     this.height = this.app.screen.height;
     this.background.resize(this.width, this.height);
+    this.zodiacLayer.resize(this.width, this.height);
+    this.player.resize(this.width, this.height);
+    this.sun.resize(this.width, this.height);
+    this.redSun.resize(this.width, this.height);
+    this.blackHole.resize(this.width, this.height);
+    this.novaBlackHole.resize(this.width, this.height);
+
+    const sizeRatio = Math.min(this.width, this.height) / 900;
+    const newEntityScale = Math.max(0.42, Math.min(1, sizeRatio));
+    if (newEntityScale !== this.entityScale) {
+      const relativeScale = newEntityScale / this.entityScale;
+      this.sun.container.scale.set(newEntityScale);
+      this.redSun.container.scale.set(newEntityScale);
+      this.blackHole.container.scale.set(this.blackHole.container.scale.x * relativeScale);
+      this.novaBlackHole.container.scale.set(this.novaBlackHole.container.scale.x * relativeScale);
+      this.quasar.container.scale.set(this.quasar.container.scale.x * relativeScale);
+      this.entityScale = newEntityScale;
+    }
+
+    this.paceScale = this.multiplayer ? 1 : Math.min(3, Math.max(1, this.width / 650));
+    this.playerPaceMultiplier = !this.multiplayer && sizeRatio >= 1 ? 2 : 1;
   };
 
   /**
@@ -1310,12 +1351,26 @@ export class GameEngine {
       // pantalla, solo su velocidad. Feedback real del usuario (2026-07-22,
       // nivel 30): "llegó un punto en donde casi no pasaban asteroides".
       // Ahora sigue bajando gradualmente hasta un piso mucho más tardío.
-      const baseInterval = (Math.max(120, 700 - this.level * 10) + this.rng() * 350) / this.paceScale;
+      // Frecuencia base configurable por admin (game_config.asteroids, ver
+      // AGENTS.md §9, 2026-07-26) — antes 700 fijo en código, ajustado a
+      // ciegas en cada ronda de feedback sin quedar resuelto del todo.
+      const spawnFrequencyBaseMs = this.gameConfig.asteroids.spawnFrequencyBaseMs;
+      const baseInterval = (Math.max(120, spawnFrequencyBaseMs - this.level * 10) + this.rng() * 350) / this.paceScale;
       // Efecto propio del Agujero Negro Nova (nivel 60+, ver AGENTS.md
       // §5.1): "provocará que la frecuencia de las rocas sea 3 veces más"
       // mientras está activo.
       this.asteroidTimer = this.novaBlackHole.triplesAsteroidSpawn ? baseInterval / 3 : baseInterval;
-      const asteroid = spawnAsteroid(this.textures, this.width, this.height, this.level, this.rng, this.entityScale, this.paceScale);
+      const asteroid = spawnAsteroid(
+        this.textures,
+        this.width,
+        this.height,
+        this.level,
+        this.rng,
+        this.entityScale,
+        this.paceScale,
+        this.gameConfig.asteroids.minSpeed,
+        this.gameConfig.asteroids.maxSpeedBonus,
+      );
       this.fieldObjects.push(asteroid);
       this.gameLayer.addChild(asteroid.sprite);
     }

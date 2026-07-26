@@ -93,8 +93,10 @@ export class ZodiacLayer {
   private instances: ZodiacInstance[] = [];
   private elapsed = 0;
   private readonly totalSpan: number;
+  private height: number;
 
   constructor(width: number, height: number) {
+    this.height = height;
     const rng = seededRng(31);
     this.totalSpan = ALL_PATTERNS.length * SPACING;
     // Dos vueltas completas del set para que siempre haya varias visibles
@@ -113,6 +115,27 @@ export class ZodiacLayer {
         this.instances.push({ g, baseY, blinkPhase: (copy * ALL_PATTERNS.length + i) * 1.7 });
       });
     }
+  }
+
+  /**
+   * Resize reactivo (2026-07-26) — a diferencia de Sun/BlackHole (que solo
+   * LEEN width/height al recalcular una posición futura), esta capa HORNEA
+   * `baseY` como posición absoluta en el constructor — sin ajustarla, tras
+   * rotar el celular o abrir un plegable las constelaciones quedarían
+   * ancladas a la altura vieja (podrían salirse de encuadre en la nueva).
+   * Se reescala cada `baseY` proporcionalmente al cambio de alto; el ancho
+   * no se toca (regenerar el número de copias horizontales exigiría
+   * reconstruir toda la capa, y el wrap-around de `update()` ya tolera un
+   * ancho de viewport distinto al de construcción sin dejar huecos).
+   */
+  resize(width: number, height: number) {
+    if (this.height === height) return;
+    const ratio = height / this.height;
+    for (const inst of this.instances) {
+      inst.baseY *= ratio;
+      inst.g.y = inst.baseY;
+    }
+    this.height = height;
   }
 
   /** `scrollSpeedPxPerSec` — mismo scroll que el resto del fondo lejano (ver ParallaxBackground). */

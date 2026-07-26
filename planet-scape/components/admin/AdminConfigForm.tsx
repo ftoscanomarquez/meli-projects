@@ -710,6 +710,45 @@ export function AdminConfigForm({ initialConfig }: { initialConfig: GameConfig }
         </div>
       </div>
 
+      <div className={styles.group}>
+        <span className={styles.groupTitle}>{t("asteroidsGroupTitle")}</span>
+        <div className={styles.fieldRow}>
+          <div className={styles.field}>
+            <label className={styles.fieldLabel} htmlFor="asteroids-frequency">
+              {t("asteroidsFrequencyLabel")}
+            </label>
+            <FormattedNumberInput
+              id="asteroids-frequency"
+              min={120}
+              value={config.asteroids.spawnFrequencyBaseMs}
+              onChange={(v) => setConfig((c) => ({ ...c, asteroids: { ...c.asteroids, spawnFrequencyBaseMs: v } }))}
+            />
+          </div>
+          <div className={styles.field}>
+            <label className={styles.fieldLabel} htmlFor="asteroids-min-speed">
+              {t("asteroidsMinSpeedLabel")}
+            </label>
+            <FormattedNumberInput
+              id="asteroids-min-speed"
+              min={10}
+              value={config.asteroids.minSpeed}
+              onChange={(v) => setConfig((c) => ({ ...c, asteroids: { ...c.asteroids, minSpeed: v } }))}
+            />
+          </div>
+          <div className={styles.field}>
+            <label className={styles.fieldLabel} htmlFor="asteroids-max-speed-bonus">
+              {t("asteroidsMaxSpeedBonusLabel")}
+            </label>
+            <FormattedNumberInput
+              id="asteroids-max-speed-bonus"
+              min={0}
+              value={config.asteroids.maxSpeedBonus}
+              onChange={(v) => setConfig((c) => ({ ...c, asteroids: { ...c.asteroids, maxSpeedBonus: v } }))}
+            />
+          </div>
+        </div>
+      </div>
+
       <BlackHoleConfigGroup
         titleKey="blackHoleGroupTitle"
         idPrefix="bh"

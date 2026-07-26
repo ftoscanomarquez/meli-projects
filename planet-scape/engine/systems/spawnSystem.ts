@@ -60,6 +60,11 @@ export function spawnAsteroid(
   // del `rng`, para no desincronizar el mundo compartido en multijugador —
   // GameEngine ya lo fija en 1 mientras hay multijugador, ver su comentario).
   paceScale = 1,
+  // Rango base configurable desde /admin (2026-07-26, ver
+  // lib/schemas/gameConfig.ts#asteroids) — antes 110/600 fijos en código.
+  // Estos valores son la BASE, antes de `sizeSpeedFactor`/nivel/`paceScale`.
+  minSpeedBase = 110,
+  maxSpeedBonusBase = 600,
 ): FieldObject {
   const texture = textures.asteroids[Math.floor(rng() * textures.asteroids.length)];
   const radius = pickAsteroidRadius(rng) * scale;
@@ -72,12 +77,12 @@ export function spawnAsteroid(
   // — feedback real del usuario (2026-07-22, nivel 30): "a mayor nivel más
   // dificultad y más velocidad no quiere decir que todos corren a máxima
   // velocidad, pero hay más variedad de velocidades — lo que se incrementa
-  // entre nivel y nivel es el valor MÁXIMO". El mínimo (110) se mantiene
-  // fijo para que sigan apareciendo asteroides lentos incluso en niveles
-  // altos; el techo (`maxSpeedBonus`) crece con el nivel hasta un tope.
-  const minSpeed = 110;
-  const maxSpeedBonus = Math.min(600, level * 14);
-  const speed = (minSpeed + rng() * (90 + maxSpeedBonus)) * sizeSpeedFactor * paceScale;
+  // entre nivel y nivel es el valor MÁXIMO". El mínimo se mantiene fijo
+  // (configurable, ya no 110 hardcoded) para que sigan apareciendo
+  // asteroides lentos incluso en niveles altos; el techo (`maxSpeedBonus`)
+  // crece con el nivel hasta el tope configurable.
+  const maxSpeedBonus = Math.min(maxSpeedBonusBase, level * 14);
+  const speed = (minSpeedBase + rng() * (90 + maxSpeedBonus)) * sizeSpeedFactor * paceScale;
   const { x, y, vx, vy } = edgePointAndVelocity(width, height, speed, rng);
   return new FieldObject(texture, "asteroid", x, y, vx, vy, radius, rng);
 }

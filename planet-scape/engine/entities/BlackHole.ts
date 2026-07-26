@@ -152,6 +152,16 @@ export class BlackHole {
     this.container.visible = false;
   }
 
+  /**
+   * Resize reactivo (2026-07-26) — mismo motivo que Sun.resize(): solo se
+   * leen `width`/`height` al elegir la próxima posición aleatoria en
+   * `spawnWarning()`, nunca se reposiciona un agujero negro ya activo.
+   */
+  resize(width: number, height: number) {
+    this.width = width;
+    this.height = height;
+  }
+
   private spawnWarning() {
     this.x = this.width * (0.18 + this.rng() * 0.64);
     this.y = this.height * (0.18 + this.rng() * 0.6);

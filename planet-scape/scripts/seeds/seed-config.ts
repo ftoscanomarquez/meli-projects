@@ -100,6 +100,8 @@ async function main() {
     // patrón aditivo; si el documento ya tiene `abilityParams` pero le falta
     // algún planeta nuevo en el futuro, se agregaría aquí con el mismo `if`.
     if (!existingDoc.abilityParams) missing.abilityParams = DEFAULT_GAME_CONFIG.abilityParams;
+    // Rango de asteroides (2026-07-26, ver AGENTS.md §9) — mismo patrón aditivo.
+    if (!existingDoc.asteroids) missing.asteroids = DEFAULT_GAME_CONFIG.asteroids;
     if (Object.keys(missing).length > 0) {
       await config.updateOne({ _id: existingDoc._id }, { $set: missing });
       console.log("seed-config: game_config migrado con las claves nuevas faltantes:", Object.keys(missing));
