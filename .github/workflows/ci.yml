@@ -3,13 +3,25 @@ name: CI
 on:
   push:
     branches: [main]
+    paths:
+      - "planet-scape/**"
+      - ".github/workflows/ci.yml"
   pull_request:
     branches: [main]
+    paths:
+      - "planet-scape/**"
+      - ".github/workflows/ci.yml"
 
 # Solo validación (lint/typecheck/tests/build) — ver docs/PRE-PROD.md Fase 6.
 # NO despliega nada: Vercel hace su propio build+deploy automático al
 # conectar el repo (Fase 7); el servidor multijugador se despliega aparte
-# con `wrangler deploy` (Fase 5), fuera de este workflow.
+# con `wrangler deploy` (Fase 5, ya hecho manualmente). El código real vive
+# en la subcarpeta `planet-scape/` (la raíz del repo GitHub es un nivel
+# arriba) — todos los steps corren con `working-directory: planet-scape`.
+defaults:
+  run:
+    working-directory: planet-scape
+
 env:
   # Solo build-time — ninguna conexión real ocurre durante `next build`
   # (confirmado real: lib/db.ts/lib/stripe.ts solo exigen que la variable
@@ -29,6 +41,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: planet-scape/package-lock.json
       - run: npm ci
       - run: npm run lint
 
@@ -40,6 +53,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: planet-scape/package-lock.json
       - run: npm ci
       - run: npm run typecheck
       - run: npm run typecheck:party
@@ -52,6 +66,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: planet-scape/package-lock.json
       - run: npm ci
       - run: npm run test
 
@@ -64,5 +79,6 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: planet-scape/package-lock.json
       - run: npm ci
       - run: npm run build
