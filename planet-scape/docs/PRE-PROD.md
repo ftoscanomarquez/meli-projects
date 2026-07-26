@@ -4,9 +4,36 @@
 >
 > Aplica la misma regla de sincronización de [`AGENTS.md` §0.1](../AGENTS.md#01-regla-de-sincronizacion-de-documentacion): todo cambio real hecho durante la ejecución de este plan se refleja también en `DEPLOYMENT.md`/`INFRA.md`/`AGENTS.md` (changelog), no solo aquí.
 
-**Creado**: 2026-07-25. **Estado general**: ⏳ pendiente — plan aprobado, ejecución arranca en la próxima sesión.
+**Creado**: 2026-07-25. **Última actualización**: 2026-07-26 (fin de sesión). **Estado general**: 🔄 en curso — Fases 1-6 completadas, Fase 7 (Vercel) desplegada y funcionando con el dominio propio, quedan pendientes puntuales antes de dar la Fase 7 por cerrada del todo. Ver "Punto de retomada" abajo.
 
 **Contexto del objetivo** (para no perderlo de vista en ninguna fase): proyecto familiar/educativo, sin presupuesto, usando exclusivamente herramientas con tier gratuito. No se espera alto volumen de usuarios — las decisiones de esta guía priorizan simplicidad y costo cero sobre escalabilidad.
+
+---
+
+## 🔖 Punto de retomada (fin de sesión 2026-07-26)
+
+**Resumen de lo que YA funciona en producción real** (`https://planet-scape.minegocito.app`):
+
+- Landing pública, `/api/health` respondiendo con Mongo Atlas conectado.
+- MongoDB Atlas, Resend (email), Stripe live (con webhook registrado), servidor multijugador (Cloudflare Worker) — todos desplegados y validados en algún punto de hoy.
+- CI de GitHub Actions en verde.
+- Login ahora es obligatorio para jugar cualquier planeta (incluidos los 4 gratis) — cambio de comportamiento pedido en vivo y ya desplegado.
+
+**Lo último que se estaba resolviendo cuando se cortó la sesión** (2026-07-26, tarde-noche):
+
+1. **Bug real encontrado y CORREGIDO**: 4 variables de entorno en Vercel (`AUTH_SECRET`, `NEXT_PUBLIC_PARTYKIT_HOST`, `APP_ORIGIN`, `PARTYKIT_SHARED_SECRET`) se habían guardado con el sufijo `_PROD` de más (arrastrado sin querer del archivo local `.env.atlas.local`, donde ese sufijo se usa a propósito para distinguirlas de los valores de desarrollo dentro del mismo archivo) — el código nunca las encontraba con ese nombre. Efecto real observado: el login por correo parecía funcionar (sin error en pantalla) pero el correo **nunca se intentaba enviar** (confirmado: no aparecía ni en los logs de Resend). Ya se corrigió: se borraron las 4 variables mal nombradas y se recrearon con el nombre correcto vía `vercel env add`, y se forzó un redeploy (`vercel redeploy <última URL de producción>`) para que las tomara.
+2. **⏳ PENDIENTE DE CONFIRMAR mañana como primer paso**: el usuario iba a volver a intentar el login justo cuando se cortó la sesión — **hay que confirmar que el correo SÍ llega ahora** antes de dar este bug por cerrado del todo. Si sigue sin llegar, revisar de nuevo el dashboard de Resend (pestaña "Emails", no "Logs") para ver si esta vez sí aparece el intento.
+3. **✅ Corregido, ya desplegado**: el texto de la pantalla de "ingresa el código" mencionaba literalmente "(o en Mailpit)" — texto de desarrollo que se había quedado hardcodeado y se veía en producción real. Ya corregido en `messages/es.json`/`en.json` (clave `codeStepHint`), commit y deploy pendientes de hacer (ver checklist abajo).
+4. **⏳ PENDIENTE, pedido explícito del usuario, no implementado todavía**: subir el tiempo para poder ingresar el código de 6 dígitos (hoy son 10 minutos, `VERIFICATION_CODE_MAX_AGE_S` en `lib/auth.ts`) — el usuario lo pidió justo antes de que se detectara el bug de las variables de entorno, no se ha decidido a cuánto subirlo. **Definir el valor nuevo con el usuario antes de tocar código.**
+
+**Checklist inmediato para la próxima sesión**:
+
+- [ ] Confirmar con el usuario si el login/correo ya funciona en producción tras el fix de variables.
+- [ ] Hacer commit + push del fix de `codeStepHint` (quitar mención a Mailpit) — está corregido en el working tree pero no subido a git todavía.
+- [ ] Decidir y aplicar el nuevo tiempo de expiración del código de 6 dígitos.
+- [ ] Retomar el plan original de Fase 7 (ver sección más abajo): confirmar variables completas, decidir si se elimina o se deja vivo el dominio `planet-scape.vercel.app` (el usuario preguntó al respecto — no hay razón técnica para eliminarlo, es decisión de preferencia).
+- [ ] Fase 8 (verificación end-to-end) sigue sin arrancar formalmente.
+- [ ] Pendiente ya acordado y pausado a propósito: implementar el resize reactivo completo del motor de juego (bug real de móvil/plegables al rotar/cambiar tamaño de viewport en plena partida) — el usuario confirmó que se haga DESPUÉS de cerrar Stripe/salas/producción. Diagnóstico completo ya hecho (ver sección "Bugs reales encontrados hoy" abajo) — falta solo implementar.
 
 ---
 
@@ -287,9 +314,9 @@ Validar localmente los comandos no fue suficiente para garantizar que el workflo
 
 ---
 
-## Fase 7 — Conectar Vercel + dominio propio ⏳ pendiente
+## Fase 7 — Conectar Vercel + dominio propio 🔄 en curso (2026-07-26) — desplegado y funcionando, quedan pendientes puntuales
 
-### Qué vamos a construir
+### Qué se construyó (Vercel)
 
 ```mermaid
 flowchart LR
@@ -299,22 +326,32 @@ flowchart LR
     D --> E["Vercel URL genérica\nplanet-scape.vercel.app"]
     B --> F["Domain Settings:\nplanet-scape.minegocito.app"]
     F -.CNAME.-> G[Cloudflare DNS]
-    B --> H["Environment Variables\n(todas las de INFRA.md §3,\ncopiadas de .env.local + las nuevas de prod)"]
+    B --> H["Environment Variables\n✅ corregidas 2026-07-26\n(ver incidente del sufijo _PROD)"]
 ```
 
 ### Nota importante — estructura de repo
 
 El repo real en GitHub (`meli-projects`) tiene la raíz git en `D:/meli-projects`, con el proyecto viviendo en la subcarpeta `planet-scape/` (confirmado en la sesión anterior — ver el commit inicial, todas las rutas llevan el prefijo `planet-scape/`). **Vercel necesita configurarse con "Root Directory" = `planet-scape`** al importar el proyecto, para que encuentre `package.json`/`next.config.ts` correctamente.
 
-### Pasos
+### Pasos ejecutados (Vercel)
 
-1. En Vercel, "Add New Project" → importar `ftoscanomarquez/meli-projects` desde GitHub (requiere que la cuenta de Vercel tenga acceso al repo).
-2. Configurar **Root Directory** = `planet-scape`.
-3. Framework detectado automáticamente como Next.js (usa `next build` por defecto — coincide con `npm run build`).
-4. Cargar **todas** las variables de entorno de producción (resultado acumulado de Fases 2-5): `MONGODB_URI`, `MONGODB_DB`, `AUTH_SECRET`, `EMAIL_SERVER_*`, `EMAIL_FROM`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_WHATSAPP_LINK`, `WHATSAPP_API_TOKEN`/`WHATSAPP_PHONE_NUMBER_ID` (si se configuran), `NEXT_PUBLIC_PARTYKIT_HOST`, `PARTYKIT_SHARED_SECRET`, `APP_ORIGIN` (ahora la URL real de producción, no localhost), `NEXT_PUBLIC_DEFAULT_LOCALE`, `NEXT_PUBLIC_LOCALES`, `DEV_AUTO_LOGIN=false` (o sin definir), `PINO_LOG_LEVEL`.
-5. Primer deploy (`main` → producción automático).
-6. Agregar el dominio `planet-scape.minegocito.app` en Vercel → Settings → Domains, y crear el registro `CNAME` (o `A`/`ALIAS` según indique Vercel) correspondiente en Cloudflare.
-7. Confirmar TLS automático de Vercel funcionando sobre el dominio propio.
+1. ✅ Vercel conectado a GitHub (cuenta previamente ligada a Gmail/GitLab — se agregó la conexión de GitHub aparte, sin romper la de GitLab que se usa para otro tipo de proyectos del usuario). Import con "Only select repositories" → solo `meli-projects`, no toda la cuenta.
+2. ✅ **Root Directory = `planet-scape`** — detectado automáticamente por Vercel al importar (no hizo falta editarlo a mano).
+3. ✅ **Project Name cambiado** de `meli-projects` (default, heredado del nombre del repo) a `planet-scape` — más claro, y deja espacio para que futuros proyectos en el mismo repo tengan su propio nombre en Vercel.
+4. ✅ Primer deploy exitoso — dominio gratis `planet-scape.vercel.app` funcionando desde el primer intento (landing real visible, con el dato curioso/carrusel de planetas).
+5. ✅ **Dominio propio agregado**: `planet-scape.minegocito.app` vía "Add Existing" en Vercel → Domains, registro `CNAME` (`planet-scape` → `5054d10b09779880.vercel-dns-017.com`, Proxy: Disabled/DNS only) agregado en Cloudflare — validado y con TLS automático emitido ("Valid Configuration" en Vercel).
+6. ✅ Variables de entorno cargadas en bloque (formato `.env` pegado directo en el formulario de Vercel, Environments: Production + Preview) — `MONGODB_URI`, `MONGODB_DB`, `AUTH_SECRET`, `EMAIL_SERVER_*`, `EMAIL_FROM`, claves de Stripe live, `NEXT_PUBLIC_PARTYKIT_HOST`, `PARTYKIT_SHARED_SECRET`, `APP_ORIGIN`, `NEXT_PUBLIC_WHATSAPP_LINK`, `NEXT_PUBLIC_DEFAULT_LOCALE`, `NEXT_PUBLIC_LOCALES`, `PINO_LOG_LEVEL`. `STRIPE_WEBHOOK_SECRET` se dejó fuera del primer bloque a propósito (dependencia circular: Stripe necesita la URL real ya funcionando para generarlo) y se agregó después (paso 9).
+
+### ⚠️ Incidente real encontrado y corregido: variables con sufijo `_PROD` de más
+
+Al copiar los valores desde `.env.atlas.local` (donde `AUTH_SECRET_PROD`/`NEXT_PUBLIC_PARTYKIT_HOST_PROD`/`APP_ORIGIN_PROD`/`PARTYKIT_SHARED_SECRET_PROD` usan ese sufijo a propósito, para distinguirlos de los valores de desarrollo que conviven en el mismo archivo), el sufijo se copió por error también como **nombre de la variable en Vercel** — el código nunca busca `AUTH_SECRET_PROD`, busca `AUTH_SECRET` a secas. Efecto real: Auth.js/el resto del código nunca encontraban estas 4 variables (equivalente a que no existieran), pero sin lanzar ningún error visible en pantalla para el usuario — el síntoma fue que el login por correo parecía completarse (pasaba a la pantalla de "ingresa el código") pero **el correo real nunca se enviaba** (confirmado: no aparecía ni en el dashboard de Resend). Diagnóstico: se probó primero el envío directo con las mismas credenciales de Resend (sí funcionó, descartando problema de Resend/entregabilidad), luego se revisaron las variables reales configuradas en Vercel vía `npx vercel env ls production` — ahí se vieron los 4 nombres con `_PROD` de sobra. Corrección: `npx vercel env rm <nombre>_PROD` + `npx vercel env add <nombre>` (production y preview por separado, el CLI no acepta ambos entornos en una sola invocación) para las 4 variables, seguido de un redeploy forzado (`npx vercel redeploy <última URL de producción>`) para que el nuevo build las tomara. **Pendiente confirmar en la próxima sesión** que el correo ya llega — el fix se aplicó justo al cierre de la sesión, sin haber podido validar el resultado final con un login real todavía.
+
+### Pasos que faltan
+
+1. ⏳ Confirmar que el login/correo funciona tras el fix de variables (primer paso de la próxima sesión).
+2. ⏳ Decidir si se elimina o se deja vivo `planet-scape.vercel.app` — no hay razón técnica para eliminarlo (sirve la misma app, el webhook de Stripe funciona igual sin importar por cuál dominio entre el usuario, ya que es una URL fija registrada aparte en Stripe) — es una decisión de preferencia/orden del usuario, quedó sin decidir.
+3. ✅ Webhook de Stripe registrado en el dashboard (modo live) apuntando a `https://planet-scape.minegocito.app/api/webhooks/stripe`, evento `checkout.session.completed` — `STRIPE_WEBHOOK_SECRET` agregado a Vercel tras esto. **Falta la prueba real de una donación de punta a punta** (se iba a hacer, pero se priorizó primero diagnosticar/arreglar el bug del login).
+4. ⏳ `APP_ORIGIN`/`NEXT_PUBLIC_PARTYKIT_HOST` del Worker de Cloudflare ya estaban correctos desde la Fase 5 (se corrigieron ahí, no en esta fase) — confirmado que las salas multijugador siguen respondiendo bien tras los redeploys de hoy (`wss://game.planet-scape.minegocito.app` probado con WebSocket real, roster correcto).
 
 ---
 

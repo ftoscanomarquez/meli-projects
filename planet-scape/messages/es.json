@@ -100,7 +100,7 @@
     "starsLabel": "estrellas",
     "signOut": "Salir",
     "myProfile": "Mi perfil",
-    "codeStepHint": "Te enviamos un código de 6 dígitos a {email}. Revísalo en tu correo (o en Mailpit) y escríbelo aquí.",
+    "codeStepHint": "Te enviamos un código de 6 dígitos a {email}. Revísalo en tu correo y escríbelo aquí.",
     "codeLabel": "Código de 6 dígitos",
     "codePlaceholder": "000000",
     "verifyCta": "Entrar",

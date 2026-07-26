@@ -100,7 +100,7 @@
     "starsLabel": "stars",
     "signOut": "Sign out",
     "myProfile": "My profile",
-    "codeStepHint": "We sent a 6-digit code to {email}. Check your email (or Mailpit) and enter it here.",
+    "codeStepHint": "We sent a 6-digit code to {email}. Check your email and enter it here.",
     "codeLabel": "6-digit code",
     "codePlaceholder": "000000",
     "verifyCta": "Enter",
