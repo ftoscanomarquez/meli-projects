@@ -276,6 +276,15 @@ flowchart TD
 
 `.github/workflows/ci.yml` — 4 jobs (`lint`, `typecheck`, `test`, `build`), validado corriendo cada paso localmente en el mismo orden y con las mismas variables dummy antes de subirlo, para no descubrir fallas solo hasta que corriera en GitHub.
 
+### Hallazgos reales encontrados DESPUÉS de subirlo (validando el workflow de verdad, corriendo en GitHub)
+
+Validar localmente los comandos no fue suficiente para garantizar que el workflow real funcionara — aparecieron 2 problemas más, específicos de correr dentro de GitHub Actions, que no se podían ver simulando comandos sueltos en la máquina local:
+
+1. **El workflow nunca se disparó en el primer push** — `git push` se completó sin error, pero `gh run list` no mostraba ningún run. Causa real: el archivo se había creado en `planet-scape/.github/workflows/ci.yml`, pero GitHub Actions **solo descubre workflows en `.github/workflows/` exactamente en la raíz del repositorio** — y la raíz git real de este repo es `D:/meli-projects` (un nivel arriba de `planet-scape/`, donde vive el código). Se movió el archivo a `.github/workflows/ci.yml` (raíz real) y se le agregó `defaults.run.working-directory: planet-scape` + un filtro `paths: ["planet-scape/**", ".github/workflows/ci.yml"]` para que siga aplicando solo a este proyecto.
+2. **Con el workflow ya disparándose, los 4 jobs fallaron en el paso `npm ci`** con `npm error code EUSAGE — package.json and package-lock.json ... are in sync` (`Missing: @swc/helpers@0.5.23 from lock file`). El lockfile tenía una inconsistencia menor (probablemente arrastrada de las varias instalaciones con `--legacy-peer-deps` de la Fase 5) que `npm install` en Windows toleraba en silencio, pero que `npm ci` en el runner Linux de GitHub rechaza de forma estricta por diseño (es justamente su propósito: instalar EXACTAMENTE lo que dice el lockfile, sin resolver nada). Solución: `rm -rf node_modules package-lock.json && npm install` completo desde cero, regenerando un lockfile consistente, validado de nuevo con `npm ci --dry-run` antes de subirlo.
+
+**Resultado final**: segundo push con el lockfile regenerado — los 4 jobs (`typecheck`, `test`, `lint`, `build`) pasaron en verde, confirmado en `https://github.com/ftoscanomarquez/meli-projects/actions`. **Lección general**: para herramientas de CI/CD, "funciona en mi máquina" (o incluso "funciona simulando los comandos localmente") no es prueba suficiente — hay que ver el run real completarse en la plataforma de destino al menos una vez antes de dar la fase por cerrada, porque hay diferencias de entorno (ubicación del workflow, SO del runner, estrictez de `npm ci` vs `npm install`) que solo se manifiestan ahí.
+
 ---
 
 ## Fase 7 — Conectar Vercel + dominio propio ⏳ pendiente
